@@ -267,7 +267,7 @@ export function getExpectedCropsPerHarvest(
       (crop.yield ?? 1) + (crop.percent_chance_extra ?? 0) / 100.0;
 
     // Make a full copy; no cloning issues!
-    let output = qualityMap(q, (x) => x);
+    const output = qualityMap(q, (x) => x);
     output.normal += crop_yield - 1;
     return output;
   } else if (crop.special_handling == "tea") {
@@ -421,8 +421,11 @@ export function getProceedsFromKeg(
       };
     default:
       // Everything else is straightforward
-      const price = multiplyPriceByPercentage(base_price, 140, artisan);
-      return { name: good_name, price, quantity };
+      return {
+        name: good_name,
+        price: multiplyPriceByPercentage(base_price, 140, artisan),
+        quantity,
+      };
   }
 }
 
@@ -489,7 +492,7 @@ export function calculate(
     total_crops_by_quality,
     settings.tiller_skill_chosen
   );
-  let other_options: [ProcessingType, Proceeds | null][] = [];
+  const other_options: [ProcessingType, Proceeds | null][] = [];
   if (settings.preserves_jar_enabled) {
     other_options.push([
       "preserves",

@@ -1,9 +1,7 @@
 import CROP_DEFINITIONS from "./crop_definitions.json";
 import {
-  CropData,
   CropDefinition,
   Season,
-  Settings,
   getNumberOfHarvests,
   getExpectedCropsPerHarvest,
   NO_QUALITY,
@@ -245,7 +243,7 @@ describe("revenue", () => {
       ["iridium", true, 264],
     ];
     for (const [quality_type, tiller, expected_price] of expected_prices) {
-      let quality = { normal: 0, silver: 0, gold: 0, iridium: 0 };
+      const quality = { normal: 0, silver: 0, gold: 0, iridium: 0 };
       quality[quality_type] = 1;
       expectProceeds(
         getProceedsFromRaw(strawberry, quality, tiller),

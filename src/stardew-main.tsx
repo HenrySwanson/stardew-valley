@@ -219,7 +219,7 @@ function CropRow({
   crop_data: CropData;
   on_click: (crop_name: string) => void;
 }) {
-  let cells = [];
+  const cells = [];
   for (const col of COLUMNS) {
     const value = col.cellText(crop_data);
     cells.push(<td key={col.name}>{value}</td>);
@@ -583,7 +583,7 @@ function CropInfo({ crop_data }: { crop_data: CropData }) {
       )
     : ["None"];
 
-  let rows: [string | JSX.Element, string | number | JSX.Element][] = [
+  const rows: [string | JSX.Element, string | number | JSX.Element][] = [
     ["Season(s)", <>{seasons}</>],
     ["Growth", <TimeTag days={def.days_to_grow} />],
     [
@@ -664,7 +664,7 @@ function Root() {
 
   // Construct the settings
   const quality = computeQuality(inputs.farming_level);
-  let settings: Settings = {
+  const settings: Settings = {
     season: inputs.season,
     start_day: inputs.start_day,
     multiseason_enabled: inputs.multiseason_checked,
@@ -677,7 +677,7 @@ function Root() {
   };
 
   // Go through all the crops and generate some rows to draw
-  let crop_data = [];
+  const crop_data = [];
   for (const def of CROP_DEFINITIONS) {
     // Filter to crops that are in-season
     const data = calculate(def, settings);
