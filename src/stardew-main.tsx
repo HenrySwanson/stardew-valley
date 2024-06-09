@@ -69,7 +69,7 @@ const QUALITY_STAR_ICONS: QualityVector<string> = {
 
 // Some GUI helper stuff
 function InlineIcon({ src }: { src: string }) {
-  const fullPath = "/img/" + src;
+  const fullPath = import.meta.env.BASE_URL + "/img/" + src;
   return <img className="inline-icon" src={fullPath} />;
 }
 
