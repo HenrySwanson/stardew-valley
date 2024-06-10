@@ -9,6 +9,9 @@ import {
   ProcessingType,
   QualityVector,
   Level10Profession,
+  Fertilizer,
+  QualityFertilizer,
+  SpeedGro,
 } from "./crops";
 import "./stardew.scss";
 
@@ -96,14 +99,14 @@ function TimeTag({ days }: { days: number }) {
 }
 
 function GoodTag({ name }: { name: string }) {
-  return <IconTag src={getCropIconPath(name)}>{name}</IconTag>;
+  return <IconTag src={getIconPath(name)}>{name}</IconTag>;
 }
 
 function enableIf(enabled: boolean) {
   return enabled ? undefined : "disabled";
 }
 
-function getCropIconPath(name: string): string {
+function getIconPath(name: string): string {
   // NOTE: replace(string, string) only replaces the first one
   return name.replace(/ /g, "_") + ".png";
 }
@@ -140,7 +143,7 @@ const COLUMNS: Column[] = [
     "Name",
     (crop: CropData) => crop.definition.name,
     (name: string) => {
-      return <IconTag src={getCropIconPath(name)}>{name}</IconTag>;
+      return <IconTag src={getIconPath(name)}>{name}</IconTag>;
     },
     (a: string, b: string) => a.localeCompare(b)
   ),
@@ -317,6 +320,7 @@ type Inputs = {
   farming_level: number;
   tiller_checkbox: boolean;
   level_10_profession: Level10Profession;
+  fertilizer: Fertilizer;
   preserves_jar_checkbox: boolean;
   kegs_checkbox: boolean;
   oil_checkbox: boolean;
@@ -330,7 +334,10 @@ function InputPanel({
   changeInputs: (inputs: Inputs) => void;
 }) {
   // Compute some values for things
-  const quality = computeQuality(inputs.farming_level);
+  const quality = computeQuality(
+    inputs.farming_level,
+    inputs.fertilizer.quality
+  );
 
   const season_options = [
     Season.SPRING,
@@ -385,7 +392,7 @@ function InputPanel({
   const farmer_level_input = (
     <input
       type="number"
-      min="1"
+      min="0"
       max="10"
       value={inputs.farming_level}
       onChange={(e) => {
@@ -423,6 +430,37 @@ function InputPanel({
   const artisan_radio = makeLvl10Radio("artisan");
   const agriculturist_radio = makeLvl10Radio("agriculturist");
   const neither_radio = makeLvl10Radio(null);
+
+  function makeFertilizerRadioButton(
+    name: string,
+    quality: QualityFertilizer | null,
+    speedgro: SpeedGro | null,
+    icon_src?: string
+  ): JSX.Element {
+    return (
+      <label className="settings-optionbox">
+        <input
+          type="radio"
+          name="fertilizer"
+          value={quality + "-" + speedgro}
+          checked={
+            inputs.fertilizer.quality === quality &&
+            inputs.fertilizer.speedgro === speedgro
+          }
+          onChange={() => {
+            changeInputs({
+              ...inputs,
+              fertilizer: {
+                quality,
+                speedgro,
+              },
+            });
+          }}
+        />
+        <IconTag src={icon_src ?? getIconPath(name)}>{name}</IconTag>
+      </label>
+    );
+  }
 
   const preserves_checkbox = (
     <input
@@ -500,6 +538,17 @@ function InputPanel({
       </div>
       <hr />
       <div className="settings-clump">
+        <span className="settings-label">Fertilizer</span>
+        {makeFertilizerRadioButton("None", null, null, "Blank.png")}
+        {makeFertilizerRadioButton("Basic Fertilizer", "basic", null)}
+        {makeFertilizerRadioButton("Quality Fertilizer", "quality", null)}
+        {makeFertilizerRadioButton("Deluxe Fertilizer", "deluxe", null)}
+        {makeFertilizerRadioButton("Speed-Gro", null, "basic")}
+        {makeFertilizerRadioButton("Deluxe Speed-Gro", null, "deluxe")}
+        {makeFertilizerRadioButton("Hyper Speed-Gro", null, "hyper")}
+      </div>
+      <hr />
+      <div className="settings-clump">
         <span className="settings-label">Processing</span>
         <label className="settings-optionbox">
           {preserves_checkbox}{" "}
@@ -541,9 +590,10 @@ const DEFAULT_INPUTS: Inputs = {
   start_day: 1,
   multiseason_checked: true,
   quality_checkbox: false,
-  farming_level: 1,
+  farming_level: 0,
   tiller_checkbox: false,
   level_10_profession: null,
+  fertilizer: { quality: null, speedgro: null },
   preserves_jar_checkbox: false,
   kegs_checkbox: false,
   oil_checkbox: false,
@@ -598,7 +648,7 @@ function CropInfo({ crop_data }: { crop_data: CropData }) {
       <thead>
         <tr>
           <th colSpan={2}>
-            <IconTag src={getCropIconPath(def.name)}>{def.name}</IconTag>
+            <IconTag src={getIconPath(def.name)}>{def.name}</IconTag>
           </th>
         </tr>
       </thead>
@@ -621,7 +671,7 @@ function Root() {
   function updateInputs(i: Inputs) {
     // Do some quick massaging of the input data.
     // TODO: is this the actual max/min?
-    i.farming_level = clamp(i.farming_level, 1, 10);
+    i.farming_level = clamp(i.farming_level, 0, 10);
 
     // When the user ticks the season too far, wrap around and bump the season, for nice UX.
     if (i.start_day <= 0) {
@@ -636,7 +686,10 @@ function Root() {
   }
 
   // Construct the settings
-  const quality = computeQuality(inputs.farming_level);
+  const quality = computeQuality(
+    inputs.farming_level,
+    inputs.fertilizer.quality
+  );
   const settings: Settings = {
     season: inputs.season,
     start_day: inputs.start_day,
@@ -645,6 +698,7 @@ function Root() {
     tiller_skill_chosen: inputs.farming_level >= 5 && inputs.tiller_checkbox,
     level_10_profession:
       inputs.farming_level >= 10 ? inputs.level_10_profession : null,
+    fertilizer: inputs.fertilizer,
     preserves_jar_enabled: inputs.preserves_jar_checkbox,
     kegs_enabled: inputs.kegs_checkbox,
     oil_maker_enabled: inputs.oil_checkbox,

@@ -50,7 +50,27 @@ export namespace Season {
 }
 
 export type Level10Profession = null | "artisan" | "agriculturist";
+
+export type QualityFertilizer = "basic" | "quality" | "deluxe";
+export type SpeedGro = "basic" | "deluxe" | "hyper";
+export type Fertilizer = {
+  quality: QualityFertilizer | null;
+  speedgro: SpeedGro | null;
+};
+
 export type ProcessingType = "raw" | "preserves" | "keg" | "oil";
+
+const QUALITY_FERTILIZER_FACTOR: Record<QualityFertilizer, number> = {
+  basic: 1,
+  quality: 2,
+  deluxe: 3,
+};
+
+const SPEEDGRO_FACTOR: Record<SpeedGro, number> = {
+  basic: 0.1,
+  deluxe: 0.25,
+  hyper: 0.33,
+};
 
 export type CropData = {
   definition: CropDefinition;
@@ -138,35 +158,41 @@ function multiplyPriceByPercentage(
 
 export function getModifiedGrowthPeriod(
   base_period: number,
-  fertilizer: number,
-  apply: boolean = true
+  speedgro: SpeedGro | null,
+  is_agriculturist: boolean
 ): number {
+  const speedgro_factor = speedgro ? SPEEDGRO_FACTOR[speedgro] : 0;
+  const agriculturist_factor = is_agriculturist ? 0.1 : 0;
+  const factor = speedgro_factor + agriculturist_factor;
+
   // According to this comment, the floating point inaccuracy actually manifests
   // in-game: https://stardewcommunitywiki.com/Talk:Speed-Gro#Floating_point_imprecision
   //
   // TODO: deal with this later! my code doesn't replicate this :(
-  if (apply) {
-    return base_period - Math.ceil(base_period * fertilizer);
-  }
-  return base_period;
+  return base_period - Math.ceil(base_period * factor);
 }
 
 /// Returns the quality ratios for a given farming level
-export function computeQuality(farming_level: number): QualityVector<number> {
+export function computeQuality(
+  farming_level: number,
+  fertilizer: QualityFertilizer | null
+): QualityVector<number> {
   // https://stardewvalleywiki.com/Farming#Complete_Formula_2
-  const fertilizer_level = 0;
+  const fertilizer_level = fertilizer
+    ? QUALITY_FERTILIZER_FACTOR[fertilizer]
+    : 0;
+  const deluxe_fertilizer = fertilizer === "deluxe";
 
   // Quality for a crop is determined by a series of weighted coin flips.
   // The probabilities for the coins are computed here.
+  // NOTE: iridium is only possible with deluxe fertilizer, and normal is impossible
+  // with it.
   const p_gold_coin =
     0.2 * (farming_level / 10.0) +
     0.2 * fertilizer_level * ((farming_level + 2.0) / 12.0) +
     0.01;
-  const p_silver_coin = Math.min(2 * p_gold_coin, 0.75);
-  let p_iridium_coin = p_gold_coin / 2;
-
-  // TODO: this is only enabled at certain fertilizer levels
-  p_iridium_coin = 0;
+  const p_silver_coin = deluxe_fertilizer ? 1 : Math.min(2 * p_gold_coin, 0.75);
+  const p_iridium_coin = deluxe_fertilizer ? p_gold_coin / 2 : 0;
 
   // However, these coins are flipped one at a time, so we have slightly more
   // work to do to find out the final probabilities.
@@ -191,6 +217,7 @@ export type Settings = {
   quality_probabilities: QualityVector<number> | null;
   tiller_skill_chosen: boolean;
   level_10_profession: Level10Profession;
+  fertilizer: Fertilizer;
   preserves_jar_enabled: boolean;
   kegs_enabled: boolean;
   oil_maker_enabled: boolean;
@@ -206,6 +233,7 @@ export function getNumberOfHarvests(
   current_season: Season,
   current_day: number,
   multiseason_enabled: boolean,
+  speedgro: SpeedGro | null,
   is_agriculturist: boolean
 ): Harvests | "out-of-season" {
   // When is this crop in-season?
@@ -237,7 +265,7 @@ export function getNumberOfHarvests(
 
     const growth_period = getModifiedGrowthPeriod(
       crop.days_to_grow,
-      0.1,
+      speedgro,
       is_agriculturist
     );
     if (days_left >= growth_period) {
@@ -497,6 +525,7 @@ export function calculate(
     settings.season,
     settings.start_day,
     settings.multiseason_enabled,
+    settings.fertilizer.speedgro,
     is_agriculturist
   );
 
@@ -559,7 +588,7 @@ export function calculate(
     useful_days: harvests.duration,
     growth_period: getModifiedGrowthPeriod(
       crop.days_to_grow,
-      0.1,
+      settings.fertilizer.speedgro,
       is_agriculturist
     ),
     num_harvests: harvests.number,
