@@ -1,5 +1,12 @@
+// ============================================================================
+// General-purpose things
+// ============================================================================
+
+// Some variables
+$DARK_TEXT: #222;
+$LIGHT_TEXT: #ddd;
+
 // Color palettes depending on season
-// TODO: what is `:root`?
 :root,
 :root.spring {
   --background-color: #8a8;
@@ -25,94 +32,27 @@
   --dark-color: #2a3f53;
 }
 
-body {
-  font-family: sans-serif;
-  background-color: var(--background-color);
+.title-bar {
+  margin: 0;
   padding: 5px;
-  color: #222;
-}
-
-h1 {
+  background-color: #f7b870;
+  color: #3c2315;
+  border-bottom: 1px solid #b9701c;
   text-align: center;
 }
 
-.auto-center {
-  margin: 0 auto;
-  max-width: fit-content;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  font-size: 12pt;
+  background-color: var(--background-color);
+  color: $DARK_TEXT;
 }
 
-.rounded-box {
-  width: fit-content;
-  padding: 10px;
-  border-radius: 15px;
-  background-color: var(--light-color);
-  border: 2px solid var(--dark-color);
-  color: #ddd;
-
-  // spaces the rounded boxes apart from each other
-  margin-bottom: 10px;
-
-  // just for input panel
-  display: flex;
-  flex-direction: row;
-  column-gap: 20px;
-
-  input {
-    width: 40px;
-  }
-}
-
-table {
-  // spaces the rows apart from each other
-  border-collapse: separate;
-  border-spacing: 0 10px;
-}
-
-td {
-  padding: 10px;
-  white-space: nowrap;
-  background-color: var(--dark-color);
-  border-left: 1px dashed var(--light-color);
-
-  // Rounded corners on the rows is tricky; <tr> doesn't take this property.
-  // Instead, do it by putting rounded corners on the first and last <td> elements.
-  &:first-child {
-    border-left: none; // also, don't draw the dashed border here
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-  }
-
-  &:last-child {
-    border-bottom-right-radius: 10px;
-    border-top-right-radius: 10px;
-  }
-}
-
-// Because of that border radius trick, to change the background color on a row, we
-// instead have to change it on all the child <td> elements.
-tr.disabled td {
-  background-color: #444;
-  color: #666;
-}
-
-th {
-  padding: 0 10px;
-  font-weight: bold;
-  text-align: center;
-  color: white;
-}
-
-// Put arrows next to header while sorting
-table.sortable thead th[aria-sort="descending"]::after {
-  content: "▼";
-  color: currentcolor;
-  padding-left: 0.2em;
-}
-
-table.sortable thead th[aria-sort="ascending"]::after {
-  content: "▲";
-  color: currentcolor;
-  padding-left: 0.2em;
+// Lets us use absolute positioning with the 'floating' sidebars
+.relative-reanchor {
+  position: relative;
 }
 
 // Icons like crop images, gold coin, etc
@@ -131,15 +71,142 @@ table.sortable thead th[aria-sort="ascending"]::after {
   width: fit-content;
 }
 
-// Specific items on page
-#input-panel-wrapper {
-  display: flex;
-  justify-content: center;
+// ============================================================================
+// Settings sidebar
+// ============================================================================
+
+.settings-panel {
+  // Pin the sidebar to the left edge of the parent div
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-height: 100%;
+
+  box-sizing: border-box;
+  padding: 5px;
+  border-right: 2px solid var(--dark-color);
+  background-color: var(--light-color);
+  color: $LIGHT_TEXT;
+
+  h2 {
+    margin: 5px;
+    font-size: large;
+  }
+
+  // Makes them stretch out to the width of the sidebar
+  & input[type="number"],
+  select {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+  }
 }
 
-#crop-table-wrapper {
-  display: flex;
-  align-items: flex-start; // don't stretch items
-  justify-content: center;
-  column-gap: 10px;
+// Spaces the settings apart
+.settings-clump {
+  margin: 10px 0;
+}
+
+.settings-label {
+  font-size: small;
+}
+
+// Forces checkboxes and such to be on separate lines
+.settings-optionbox {
+  display: block;
+}
+
+// ============================================================================
+// Main crop table
+// ============================================================================
+
+.main-table {
+  // Centers the div
+  margin: 0 auto;
+  width: fit-content;
+  padding: 10px;
+
+  table {
+    // spaces the rows apart from each other
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+
+  td {
+    padding: 10px;
+    background-color: var(--dark-color);
+    color: $LIGHT_TEXT;
+
+    // lightly separate the cells
+    border-left: 1px dashed var(--light-color);
+
+    // Rounded corners on the rows is tricky; <tr> doesn't take this property.
+    // Instead, do it by putting rounded corners on the first and last <td> elements.
+    &:first-child {
+      border-left: none; // also, don't draw the dashed border here
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+    }
+
+    &:last-child {
+      border-bottom-right-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+  }
+
+  // Because of that border radius trick, to change the background color on a row, we
+  // instead have to change it on all the child <td> elements.
+  tr.disabled td {
+    background-color: #444;
+    color: #666;
+  }
+
+  th {
+    padding: 0 10px;
+    font-weight: bold;
+    text-align: center;
+  }
+}
+
+// Put arrows next to header while sorting
+table.sortable thead th[aria-sort="descending"]::after {
+  content: "▼";
+  color: currentcolor;
+  padding-left: 0.2em;
+}
+
+table.sortable thead th[aria-sort="ascending"]::after {
+  content: "▲";
+  color: currentcolor;
+  padding-left: 0.2em;
+}
+
+// ============================================================================
+// Details panel
+// ============================================================================
+
+.details-panel {
+  // TODO: how can i get this to stick to the side of the crop table?
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-height: 100%;
+}
+
+.crop-sidetable {
+  background-color: var(--light-color);
+  border: 2px solid var(--dark-color);
+  color: $LIGHT_TEXT;
+
+  padding: 10px;
+  border-radius: 15px;
+
+  table {
+    border-collapse: collapse;
+  }
+
+  td {
+    padding: 5px 10px;
+    border-top: 1px solid var(--background-color);
+  }
 }

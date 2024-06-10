@@ -6,8 +6,6 @@ import {
   computeQuality,
   calculate,
   Settings,
-  PRICE_MULTIPLIERS,
-  qualityDot,
   ProcessingType,
   QualityVector,
 } from "./crops";
@@ -301,14 +299,12 @@ function CropTable({
   ));
 
   return (
-    <div className="rounded-box">
-      <table className="sortable">
-        <thead>
-          <tr>{header_cells}</tr>
-        </thead>
-        <tbody>{rows}</tbody>
-      </table>
-    </div>
+    <table className="sortable">
+      <thead>
+        <tr>{header_cells}</tr>
+      </thead>
+      <tbody>{rows}</tbody>
+    </table>
   );
 }
 
@@ -334,7 +330,6 @@ function InputPanel({
 }) {
   // Compute some values for things
   const quality = computeQuality(inputs.farming_level);
-  const average_quality_score = qualityDot(quality, PRICE_MULTIPLIERS);
   const tiller_checkbox_enabled = inputs.farming_level >= 5;
   const artisan_checkbox_enabled = inputs.farming_level >= 10;
 
@@ -349,8 +344,6 @@ function InputPanel({
   });
   const season_select = (
     <select
-      id="season"
-      name="season"
       value={Season[inputs.season].toLowerCase()}
       onChange={(e) => {
         changeInputs({ ...inputs, season: Season.fromString(e.target.value) });
@@ -363,7 +356,6 @@ function InputPanel({
   const day_input = (
     <input
       type="number"
-      id="day"
       value={inputs.start_day}
       onChange={(e) => {
         changeInputs({ ...inputs, start_day: e.target.valueAsNumber });
@@ -374,7 +366,6 @@ function InputPanel({
   const multiseason_checkbox = (
     <input
       type="checkbox"
-      id="enable-multiseason"
       checked={inputs.multiseason_checked}
       onChange={(e) => {
         changeInputs({ ...inputs, multiseason_checked: e.target.checked });
@@ -385,7 +376,6 @@ function InputPanel({
   const quality_checkbox = (
     <input
       type="checkbox"
-      id="enable-quality"
       checked={inputs.quality_checkbox}
       onChange={(e) => {
         changeInputs({ ...inputs, quality_checkbox: e.target.checked });
@@ -396,7 +386,6 @@ function InputPanel({
   const farmer_level_input = (
     <input
       type="number"
-      id="farmer-level"
       min="1"
       max="10"
       value={inputs.farming_level}
@@ -409,7 +398,6 @@ function InputPanel({
   const tiller_checkbox = (
     <input
       type="checkbox"
-      id="enable-tiller"
       disabled={!tiller_checkbox_enabled}
       checked={inputs.tiller_checkbox}
       onChange={(e) => {
@@ -421,7 +409,6 @@ function InputPanel({
   const artisan_checkbox = (
     <input
       type="checkbox"
-      id="enable-artisan"
       disabled={!artisan_checkbox_enabled}
       checked={inputs.artisan_checkbox}
       onChange={(e) => {
@@ -433,7 +420,6 @@ function InputPanel({
   const preserves_checkbox = (
     <input
       type="checkbox"
-      id="enable-preserves"
       checked={inputs.preserves_jar_checkbox}
       onChange={(e) => {
         changeInputs({ ...inputs, preserves_jar_checkbox: e.target.checked });
@@ -444,7 +430,6 @@ function InputPanel({
   const kegs_checkbox = (
     <input
       type="checkbox"
-      id="enable-kegs"
       checked={inputs.kegs_checkbox}
       onChange={(e) => {
         changeInputs({ ...inputs, kegs_checkbox: e.target.checked });
@@ -455,7 +440,6 @@ function InputPanel({
   const oil_checkbox = (
     <input
       type="checkbox"
-      id="enable-oil"
       checked={inputs.oil_checkbox}
       onChange={(e) => {
         changeInputs({ ...inputs, oil_checkbox: e.target.checked });
@@ -463,101 +447,64 @@ function InputPanel({
     />
   );
 
-  // TODO: should this be a <form>?
   return (
-    <div className="rounded-box">
-      <table>
-        <tbody>
-          <tr>
-            <td>
-              <label htmlFor="season">Season:</label>
-            </td>
-            <td>{season_select}</td>
-          </tr>
-          <tr>
-            <td>
-              <label htmlFor="day">Day (1-28):</label>
-            </td>
-            <td>{day_input}</td>
-          </tr>
-          <tr>
-            <td>
-              <label htmlFor="enable-multiseason">Multi-season?:</label>
-            </td>
-            <td>{multiseason_checkbox}</td>
-          </tr>
-        </tbody>
-      </table>
-      <table>
-        <tbody>
-          <tr>
-            <td>
-              <label htmlFor="farmer-level">Farmer Level:</label>
-            </td>
-            <td>{farmer_level_input}</td>
-          </tr>
-          <tr className={enableIf(tiller_checkbox_enabled)}>
-            <td>
-              <label htmlFor="enable-tiller">Tiller Profession?:</label>
-            </td>
-            <td>{tiller_checkbox}</td>
-          </tr>
-          <tr className={enableIf(artisan_checkbox_enabled)}>
-            <td>
-              <label htmlFor="enable-artisan">Artisan Profession?:</label>
-            </td>
-            <td>{artisan_checkbox}</td>
-          </tr>
-        </tbody>
-      </table>
-      <table>
-        <tbody>
-          <tr>
-            <td colSpan={3}>
-              <label htmlFor="enable-quality">Enable Quality?:</label>
-            </td>
-            <td>{quality_checkbox}</td>
-          </tr>
-          <tr className={enableIf(inputs.quality_checkbox)}>
-            <td colSpan={3}>Average Quality Factor:</td>
-            <td>{average_quality_score.toFixed(2)}</td>
-          </tr>
-          <tr className={enableIf(inputs.quality_checkbox)}>
-            {QUALITIES.map((q) => {
-              const pct = quality[q] * 100;
-              const icon = QUALITY_STAR_ICONS[q];
-              return (
-                <td key={q}>
-                  <IconTag src={icon}>{pct.toFixed(0)}%</IconTag>
-                </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
-      <table>
-        <tbody>
-          <tr>
-            <td>
-              <label htmlFor="enable-preserves">Preserve Jars?:</label>
-            </td>
-            <td>{preserves_checkbox}</td>
-          </tr>
-          <tr>
-            <td>
-              <label htmlFor="enable-kegs">Kegs?:</label>
-            </td>
-            <td>{kegs_checkbox}</td>
-          </tr>
-          <tr>
-            <td>
-              <label htmlFor="enable-oil">Oil Makers?:</label>
-            </td>
-            <td>{oil_checkbox}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <>
+      <h2>Settings</h2>
+      <hr />
+      <div className="settings-clump">
+        <label>
+          <span className="settings-label">Season</span>
+          {season_select}
+        </label>
+      </div>
+      <div className="settings-clump">
+        <label>
+          <span className="settings-label">Day (1-28)</span>
+          {day_input}
+        </label>
+      </div>
+      <hr />
+      <div className="settings-clump">
+        <label className="settings-clump">
+          <span className="settings-label">Farming Level</span>
+          {farmer_level_input}
+        </label>
+      </div>
+      <div className="settings-clump">
+        <span className="settings-label">Skills</span>
+        <label className="settings-optionbox">{tiller_checkbox} Tiller</label>
+        <label className="settings-optionbox">{artisan_checkbox} Artisan</label>
+      </div>
+      <hr />
+      <div className="settings-clump">
+        <span className="settings-label">Processing</span>
+        <label className="settings-optionbox">
+          {preserves_checkbox} Preserve Jars
+        </label>
+        <label className="settings-optionbox">{kegs_checkbox} Kegs</label>
+        <label className="settings-optionbox">{oil_checkbox} Oil Makers</label>
+      </div>
+      <hr />
+      <div className="settings-clump">
+        <span className="settings-label">Miscellaneous</span>
+        <label className="settings-optionbox">
+          {multiseason_checkbox} Cross-Season Crops?
+        </label>
+        <label className="settings-optionbox">
+          {quality_checkbox} Enable Quality?
+        </label>
+        {inputs.quality_checkbox &&
+          QUALITIES.map((q) => {
+            const pct = quality[q] * 100;
+            const icon = QUALITY_STAR_ICONS[q];
+            return (
+              <li>
+                <IconTag src={icon}>{pct.toFixed(0)}%</IconTag>
+              </li>
+            );
+          })}
+      </div>
+    </>
   );
 }
 
@@ -619,25 +566,23 @@ function CropInfo({ crop_data }: { crop_data: CropData }) {
   }
 
   return (
-    <div className="rounded-box">
-      <table>
-        <thead>
+    <table className="crop-sidetable">
+      <thead>
+        <tr>
+          <th colSpan={2}>
+            <IconTag src={getCropIconPath(def.name)}>{def.name}</IconTag>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([name, prop]) => (
           <tr>
-            <th colSpan={2}>
-              <IconTag src={getCropIconPath(def.name)}>{def.name}</IconTag>
-            </th>
+            <td>{name}</td>
+            <td>{prop}</td>
           </tr>
-        </thead>
-        <tbody>
-          {rows.map(([name, prop]) => (
-            <tr>
-              <td>{name}</td>
-              <td>{prop}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -702,14 +647,16 @@ function Root() {
 
   return (
     <>
-      <div className="auto-center">
+      <div className="settings-panel">
         <InputPanel inputs={inputs} changeInputs={updateInputs}></InputPanel>
       </div>
-      <div id="crop-table-wrapper">
+      <div className="main-table">
         <CropTable
           crop_data={crop_data}
           on_row_click={updateInfoBox}
         ></CropTable>
+      </div>
+      <div className="details-panel">
         {sidetable_data !== undefined && (
           <CropInfo crop_data={sidetable_data}></CropInfo>
         )}
