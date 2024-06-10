@@ -12,6 +12,7 @@ import {
   Fertilizer,
   QualityFertilizer,
   SpeedGro,
+  Quality,
 } from "./crops";
 import "./stardew.scss";
 
@@ -31,6 +32,10 @@ function toFixedOrInteger(n: number, fractionDigits?: number): string {
     return n.toString();
   }
   return n.toFixed(fractionDigits);
+}
+
+function titleCase(word: string): string {
+  return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
 }
 
 // Sorts
@@ -55,12 +60,7 @@ function compareNullableNumbers(
   return x - y;
 }
 
-const QUALITIES: (keyof QualityVector<never>)[] = [
-  "normal",
-  "silver",
-  "gold",
-  "iridium",
-];
+const QUALITIES: Quality[] = ["normal", "silver", "gold", "iridium"];
 
 const QUALITY_STAR_ICONS: QualityVector<string> = {
   normal: "Base_Quality.png",
@@ -319,7 +319,7 @@ type Inputs = {
   quality_checkbox: boolean;
   farming_level: number;
   tiller_checkbox: boolean;
-  level_10_profession: Level10Profession;
+  level_10_profession: Level10Profession | null;
   fertilizer: Fertilizer;
   preserves_jar_checkbox: boolean;
   kegs_checkbox: boolean;
@@ -392,8 +392,6 @@ function InputPanel({
   const farmer_level_input = (
     <input
       type="number"
-      min="0"
-      max="10"
       value={inputs.farming_level}
       onChange={(e) => {
         changeInputs({ ...inputs, farming_level: e.target.valueAsNumber });
@@ -412,24 +410,29 @@ function InputPanel({
     />
   );
 
-  function makeLvl10Radio(value: Level10Profession): JSX.Element {
+  function makeLvl10Radio(
+    profession: Level10Profession,
+    icon_src?: string
+  ): JSX.Element {
+    const titleCaseName = titleCase(profession);
     return (
-      <input
-        type="radio"
-        name="level-10-profession"
-        value={value ?? ""}
-        disabled={inputs.farming_level < 10}
-        checked={inputs.level_10_profession == value}
-        onChange={() => {
-          changeInputs({ ...inputs, level_10_profession: value });
-        }}
-      />
+      <label className="settings-optionbox">
+        <input
+          type="radio"
+          name="level-10-profession"
+          value={profession}
+          disabled={inputs.farming_level < 10}
+          checked={inputs.level_10_profession == profession}
+          onChange={() => {
+            changeInputs({ ...inputs, level_10_profession: profession });
+          }}
+        />
+        <IconTag src={icon_src ?? getIconPath(titleCaseName)}>
+          {titleCaseName}
+        </IconTag>
+      </label>
     );
   }
-
-  const artisan_radio = makeLvl10Radio("artisan");
-  const agriculturist_radio = makeLvl10Radio("agriculturist");
-  const neither_radio = makeLvl10Radio(null);
 
   function makeFertilizerRadioButton(
     name: string,
@@ -523,18 +526,9 @@ function InputPanel({
       </div>
       <div className="settings-clump">
         <span className="settings-label">Level 10 Profession</span>
-        <label className="settings-optionbox">
-          {artisan_radio}
-          <IconTag src="Artisan.png">Artisan</IconTag>
-        </label>
-        <label className="settings-optionbox">
-          {agriculturist_radio}
-          <IconTag src="Agriculturist.png">Agriculturist</IconTag>
-        </label>
-        <label className="settings-optionbox">
-          {neither_radio}
-          <IconTag src="Question.png">Other</IconTag>
-        </label>
+        {makeLvl10Radio("agriculturist", "Agriculturist.png")}
+        {makeLvl10Radio("artisan", "Artisan.png")}
+        {makeLvl10Radio("other", "Question.png")}
       </div>
       <hr />
       <div className="settings-clump">
@@ -670,8 +664,9 @@ function Root() {
 
   function updateInputs(i: Inputs) {
     // Do some quick massaging of the input data.
-    // TODO: is this the actual max/min?
-    i.farming_level = clamp(i.farming_level, 0, 10);
+
+    // You can get skills above 10 using food. Wiki claims 14 is max.
+    i.farming_level = clamp(i.farming_level, 0, 14);
 
     // When the user ticks the season too far, wrap around and bump the season, for nice UX.
     if (i.start_day <= 0) {
@@ -748,20 +743,5 @@ function Root() {
   );
 }
 
-function initialize() {
-  console.log("Initializing!");
-
-  // Create React root
-  const root = createRoot(document.getElementById("root")!);
-  root.render(<Root />);
-}
-
-// Alrighty, we're ready to go! Wait for the DOM to finish loading (or see if it
-// already has.
-if (document.readyState === "loading") {
-  // Loading hasn't finished yet
-  document.addEventListener("DOMContentLoaded", initialize);
-} else {
-  // `DOMContentLoaded` has already fired
-  initialize();
-}
+const root = createRoot(document.getElementById("root")!);
+root.render(<Root />);

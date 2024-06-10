@@ -49,7 +49,11 @@ export namespace Season {
   }
 }
 
-export type Level10Profession = null | "artisan" | "agriculturist";
+// Various enums
+
+export type Quality = "normal" | "silver" | "gold" | "iridium";
+
+export type Level10Profession = "artisan" | "agriculturist" | "other";
 
 export type QualityFertilizer = "basic" | "quality" | "deluxe";
 export type SpeedGro = "basic" | "deluxe" | "hyper";
@@ -85,12 +89,7 @@ export type CropData = {
   profit: number;
 };
 
-export type QualityVector<T> = {
-  normal: T;
-  silver: T;
-  gold: T;
-  iridium: T;
-};
+export type QualityVector<T> = Record<Quality, T>;
 
 function qualityMap<T, U>(
   q: QualityVector<T>,
@@ -216,7 +215,7 @@ export type Settings = {
   multiseason_enabled: boolean;
   quality_probabilities: QualityVector<number> | null;
   tiller_skill_chosen: boolean;
-  level_10_profession: Level10Profession;
+  level_10_profession: Level10Profession | null;
   fertilizer: Fertilizer;
   preserves_jar_enabled: boolean;
   kegs_enabled: boolean;
