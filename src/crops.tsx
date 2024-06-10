@@ -49,11 +49,13 @@ export namespace Season {
   }
 }
 
+export type Level10Profession = null | "artisan" | "agriculturist";
 export type ProcessingType = "raw" | "preserves" | "keg" | "oil";
 
 export type CropData = {
   definition: CropDefinition;
   useful_days: number;
+  growth_period: number; // might be affected by fertilizer
   num_harvests: number;
   num_crops: number;
   crop_proceeds: QualityVector<Proceeds>;
@@ -134,6 +136,21 @@ function multiplyPriceByPercentage(
   }
 }
 
+export function getModifiedGrowthPeriod(
+  base_period: number,
+  fertilizer: number,
+  apply: boolean = true
+): number {
+  // According to this comment, the floating point inaccuracy actually manifests
+  // in-game: https://stardewcommunitywiki.com/Talk:Speed-Gro#Floating_point_imprecision
+  //
+  // TODO: deal with this later! my code doesn't replicate this :(
+  if (apply) {
+    return base_period - Math.ceil(base_period * fertilizer);
+  }
+  return base_period;
+}
+
 /// Returns the quality ratios for a given farming level
 export function computeQuality(farming_level: number): QualityVector<number> {
   // https://stardewvalleywiki.com/Farming#Complete_Formula_2
@@ -173,7 +190,7 @@ export type Settings = {
   multiseason_enabled: boolean;
   quality_probabilities: QualityVector<number> | null;
   tiller_skill_chosen: boolean;
-  artisan_skill_chosen: boolean;
+  level_10_profession: Level10Profession;
   preserves_jar_enabled: boolean;
   kegs_enabled: boolean;
   oil_maker_enabled: boolean;
@@ -188,7 +205,8 @@ export function getNumberOfHarvests(
   crop: CropDefinition,
   current_season: Season,
   current_day: number,
-  multiseason_enabled: boolean
+  multiseason_enabled: boolean,
+  is_agriculturist: boolean
 ): Harvests | "out-of-season" {
   // When is this crop in-season?
   // Note: Cactus Fruit has no season; watch out for that!
@@ -217,12 +235,17 @@ export function getNumberOfHarvests(
     let num_harvests = 0;
     let useful_days = 0;
 
-    if (days_left >= crop.days_to_grow) {
+    const growth_period = getModifiedGrowthPeriod(
+      crop.days_to_grow,
+      0.1,
+      is_agriculturist
+    );
+    if (days_left >= growth_period) {
       num_harvests += 1;
-      useful_days += crop.days_to_grow;
+      useful_days += growth_period;
       if (crop.regrowth_period) {
         const extra_harvests = Math.floor(
-          (days_left - crop.days_to_grow) / crop.regrowth_period
+          (days_left - growth_period) / crop.regrowth_period
         );
         num_harvests += extra_harvests;
         useful_days += extra_harvests * crop.regrowth_period;
@@ -237,6 +260,7 @@ export function getNumberOfHarvests(
     // Is this tea? If so, skip all that; compute it differently.
 
     // First figure out how many we get during the first season.
+    // Note that this is not affected by Agriculturist.
     const becomes_bush_at = current_day + crop.days_to_grow;
     const leaves_harvested_first_season = Math.max(
       0, // can't go negative!
@@ -465,12 +489,15 @@ export function calculate(
   crop: CropDefinition,
   settings: Settings
 ): CropData | "out-of-season" {
+  const is_agriculturist = settings.level_10_profession === "agriculturist";
+
   // How many harvests do we get, if any?
   const harvests = getNumberOfHarvests(
     crop,
     settings.season,
     settings.start_day,
-    settings.multiseason_enabled
+    settings.multiseason_enabled,
+    is_agriculturist
   );
 
   if (harvests == "out-of-season") {
@@ -487,6 +514,7 @@ export function calculate(
   const total_crops = qualitySum(total_crops_by_quality);
 
   // Now we have a bunch of crops. What is the most profitable thing to do with them?
+  const is_artisan = settings.level_10_profession === "artisan";
   const raw_proceeds = getProceedsFromRaw(
     crop,
     total_crops_by_quality,
@@ -496,17 +524,13 @@ export function calculate(
   if (settings.preserves_jar_enabled) {
     other_options.push([
       "preserves",
-      getProceedsFromPreservesJar(
-        crop,
-        total_crops,
-        settings.artisan_skill_chosen
-      ),
+      getProceedsFromPreservesJar(crop, total_crops, is_artisan),
     ]);
   }
   if (settings.kegs_enabled) {
     other_options.push([
       "keg",
-      getProceedsFromKeg(crop, total_crops, settings.artisan_skill_chosen),
+      getProceedsFromKeg(crop, total_crops, is_artisan),
     ]);
   }
   if (settings.oil_maker_enabled) {
@@ -533,6 +557,11 @@ export function calculate(
   return {
     definition: crop,
     useful_days: harvests.duration,
+    growth_period: getModifiedGrowthPeriod(
+      crop.days_to_grow,
+      0.1,
+      is_agriculturist
+    ),
     num_harvests: harvests.number,
     num_crops: total_crops,
     crop_proceeds: getVectorProceedsFromRaw(

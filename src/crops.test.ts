@@ -30,7 +30,7 @@ describe("number of harvests", () => {
     duration: number
   ) {
     expect(
-      getNumberOfHarvests(crop, season, day, multiseason_enabled)
+      getNumberOfHarvests(crop, season, day, multiseason_enabled, false)
     ).toStrictEqual({
       number: num_harvests,
       duration,
@@ -44,9 +44,9 @@ describe("number of harvests", () => {
     expectHelper(cauliflower, Season.SPRING, 10, false, 1, 12);
     expectHelper(cauliflower, Season.SPRING, 16, false, 1, 12);
     expectHelper(cauliflower, Season.SPRING, 17, false, 0, 0);
-    expect(getNumberOfHarvests(cauliflower, Season.SUMMER, 1, false)).toBe(
-      "out-of-season"
-    );
+    expect(
+      getNumberOfHarvests(cauliflower, Season.SUMMER, 1, false, false)
+    ).toBe("out-of-season");
   });
 
   test("strawberry", () => {
@@ -65,9 +65,9 @@ describe("number of harvests", () => {
     // No harvest
     expectHelper(strawberry, Season.SPRING, 21, false, 0, 0);
     // Out of season (different from no harvest!)
-    expect(getNumberOfHarvests(strawberry, Season.SUMMER, 1, false)).toBe(
-      "out-of-season"
-    );
+    expect(
+      getNumberOfHarvests(strawberry, Season.SUMMER, 1, false, false)
+    ).toBe("out-of-season");
   });
 
   test("multiseason", () => {
@@ -107,16 +107,16 @@ describe("number of harvests", () => {
     expectHelper(corn, Season.FALL, 25, true, 0, 0);
 
     // It also won't grow in the wrong season at all
-    expect(getNumberOfHarvests(sunflower, Season.SPRING, 1, true)).toBe(
+    expect(getNumberOfHarvests(sunflower, Season.SPRING, 1, true, false)).toBe(
       "out-of-season"
     );
-    expect(getNumberOfHarvests(sunflower, Season.SPRING, 28, true)).toBe(
+    expect(getNumberOfHarvests(sunflower, Season.SPRING, 28, true, false)).toBe(
       "out-of-season"
     );
-    expect(getNumberOfHarvests(corn, Season.SPRING, 1, true)).toBe(
+    expect(getNumberOfHarvests(corn, Season.SPRING, 1, true, false)).toBe(
       "out-of-season"
     );
-    expect(getNumberOfHarvests(corn, Season.SPRING, 28, true)).toBe(
+    expect(getNumberOfHarvests(corn, Season.SPRING, 28, true, false)).toBe(
       "out-of-season"
     );
   });

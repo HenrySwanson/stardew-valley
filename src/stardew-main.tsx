@@ -8,6 +8,7 @@ import {
   Settings,
   ProcessingType,
   QualityVector,
+  Level10Profession,
 } from "./crops";
 import "./stardew.scss";
 
@@ -315,7 +316,7 @@ type Inputs = {
   quality_checkbox: boolean;
   farming_level: number;
   tiller_checkbox: boolean;
-  artisan_checkbox: boolean;
+  level_10_profession: Level10Profession;
   preserves_jar_checkbox: boolean;
   kegs_checkbox: boolean;
   oil_checkbox: boolean;
@@ -330,8 +331,6 @@ function InputPanel({
 }) {
   // Compute some values for things
   const quality = computeQuality(inputs.farming_level);
-  const tiller_checkbox_enabled = inputs.farming_level >= 5;
-  const artisan_checkbox_enabled = inputs.farming_level >= 10;
 
   const season_options = [
     Season.SPRING,
@@ -398,7 +397,7 @@ function InputPanel({
   const tiller_checkbox = (
     <input
       type="checkbox"
-      disabled={!tiller_checkbox_enabled}
+      disabled={inputs.farming_level < 5}
       checked={inputs.tiller_checkbox}
       onChange={(e) => {
         changeInputs({ ...inputs, tiller_checkbox: e.target.checked });
@@ -406,16 +405,24 @@ function InputPanel({
     />
   );
 
-  const artisan_checkbox = (
-    <input
-      type="checkbox"
-      disabled={!artisan_checkbox_enabled}
-      checked={inputs.artisan_checkbox}
-      onChange={(e) => {
-        changeInputs({ ...inputs, artisan_checkbox: e.target.checked });
-      }}
-    />
-  );
+  function makeLvl10Radio(value: Level10Profession): JSX.Element {
+    return (
+      <input
+        type="radio"
+        name="level-10-profession"
+        value={value ?? ""}
+        disabled={inputs.farming_level < 10}
+        checked={inputs.level_10_profession == value}
+        onChange={() => {
+          changeInputs({ ...inputs, level_10_profession: value });
+        }}
+      />
+    );
+  }
+
+  const artisan_radio = makeLvl10Radio("artisan");
+  const agriculturist_radio = makeLvl10Radio("agriculturist");
+  const neither_radio = makeLvl10Radio(null);
 
   const preserves_checkbox = (
     <input
@@ -471,18 +478,39 @@ function InputPanel({
         </label>
       </div>
       <div className="settings-clump">
-        <span className="settings-label">Skills</span>
-        <label className="settings-optionbox">{tiller_checkbox} Tiller</label>
-        <label className="settings-optionbox">{artisan_checkbox} Artisan</label>
+        <span className="settings-label">Level 5 Profession</span>
+        <label className="settings-optionbox">
+          {tiller_checkbox} <IconTag src="Tiller.png">Tiller</IconTag>
+        </label>
+      </div>
+      <div className="settings-clump">
+        <span className="settings-label">Level 10 Profession</span>
+        <label className="settings-optionbox">
+          {artisan_radio}
+          <IconTag src="Artisan.png">Artisan</IconTag>
+        </label>
+        <label className="settings-optionbox">
+          {agriculturist_radio}
+          <IconTag src="Agriculturist.png">Agriculturist</IconTag>
+        </label>
+        <label className="settings-optionbox">
+          {neither_radio}
+          <IconTag src="Question.png">Other</IconTag>
+        </label>
       </div>
       <hr />
       <div className="settings-clump">
         <span className="settings-label">Processing</span>
         <label className="settings-optionbox">
-          {preserves_checkbox} Preserve Jars
+          {preserves_checkbox}{" "}
+          <IconTag src="Preserves_Jar.png">Preserves Jar</IconTag>
         </label>
-        <label className="settings-optionbox">{kegs_checkbox} Kegs</label>
-        <label className="settings-optionbox">{oil_checkbox} Oil Makers</label>
+        <label className="settings-optionbox">
+          {kegs_checkbox} <IconTag src="Keg.png">Keg</IconTag>
+        </label>
+        <label className="settings-optionbox">
+          {oil_checkbox} <IconTag src="Oil_Maker.png">Oil Maker</IconTag>
+        </label>
       </div>
       <hr />
       <div className="settings-clump">
@@ -515,7 +543,7 @@ const DEFAULT_INPUTS: Inputs = {
   quality_checkbox: false,
   farming_level: 1,
   tiller_checkbox: false,
-  artisan_checkbox: false,
+  level_10_profession: null,
   preserves_jar_checkbox: false,
   kegs_checkbox: false,
   oil_checkbox: false,
@@ -532,7 +560,7 @@ function CropInfo({ crop_data }: { crop_data: CropData }) {
 
   const rows: [string | JSX.Element, string | number | JSX.Element][] = [
     ["Season(s)", <>{seasons}</>],
-    ["Growth", <TimeTag days={def.days_to_grow} />],
+    ["Growth", <TimeTag days={crop_data.growth_period} />],
     [
       "Regrowth",
       def.regrowth_period ? <TimeTag days={def.regrowth_period} /> : "-",
@@ -614,8 +642,9 @@ function Root() {
     start_day: inputs.start_day,
     multiseason_enabled: inputs.multiseason_checked,
     quality_probabilities: inputs.quality_checkbox ? quality : null,
-    tiller_skill_chosen: inputs.tiller_checkbox && inputs.farming_level >= 5,
-    artisan_skill_chosen: inputs.artisan_checkbox && inputs.farming_level >= 10,
+    tiller_skill_chosen: inputs.farming_level >= 5 && inputs.tiller_checkbox,
+    level_10_profession:
+      inputs.farming_level >= 10 ? inputs.level_10_profession : null,
     preserves_jar_enabled: inputs.preserves_jar_checkbox,
     kegs_enabled: inputs.kegs_checkbox,
     oil_maker_enabled: inputs.oil_checkbox,
