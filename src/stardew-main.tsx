@@ -720,7 +720,11 @@ function Root() {
 
   // Handler for the box on the RHS
   function updateInfoBox(crop_name: string) {
-    setCropSelected(crop_name);
+    if (crop_name !== cropSelected) {
+      setCropSelected(crop_name);
+    } else {
+      setCropSelected(null);
+    }
   }
 
   return (
