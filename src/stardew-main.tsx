@@ -661,6 +661,7 @@ function CropInfo({ crop_data }: { crop_data: CropData }) {
 function Root() {
   const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS);
   const [cropSelected, setCropSelected] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   function updateInputs(i: Inputs) {
     // Do some quick massaging of the input data.
@@ -729,7 +730,22 @@ function Root() {
 
   return (
     <>
-      <div className="settings-panel">
+      <button className="settings-button" onClick={() => setSidebarOpen(true)}>
+        Settings
+      </button>
+      <div
+        className={
+          sidebarOpen
+            ? "settings-backdrop"
+            : "settings-backdrop sidebar-collapsed"
+        }
+        onClick={() => setSidebarOpen(false)}
+      />
+      <div
+        className={
+          sidebarOpen ? "settings-panel" : "settings-panel sidebar-collapsed"
+        }
+      >
         <InputPanel inputs={inputs} changeInputs={updateInputs}></InputPanel>
       </div>
       <div className="main-table">

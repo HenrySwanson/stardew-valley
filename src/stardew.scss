@@ -83,7 +83,7 @@ body {
   min-height: 100%;
 
   box-sizing: border-box;
-  padding: 5px;
+  padding: 10px;
   border-right: 2px solid var(--dark-color);
   background-color: var(--light-color);
   color: $LIGHT_TEXT;
@@ -99,6 +99,56 @@ body {
     display: block;
     box-sizing: border-box;
     width: 100%;
+  }
+}
+
+// Hidden unless we're on a sufficiently small screen
+.settings-button, .settings-backdrop{
+  display: none;
+}
+
+// If we're on a sufficiently small screen, change the layout
+// to an expandable sidebar.
+@media (max-width: 1350px) {
+  .settings-panel {
+    // TODO: is this color better in all cases? it looks nice on mobile
+    // at least.
+    background-color: #222;
+    border-right: 2px solid #333;
+
+    // Not part of the layout anymore; place it at the left edge
+    // of the viewport.
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2; // above the backdrop
+
+    transition: transform 0.3s ease;
+
+    &.sidebar-collapsed {
+      transform: translate(-100%);
+    }
+  }
+
+  .settings-button {
+    display: inline-block;
+  }
+
+  .settings-backdrop {
+    display: block;
+    position: fixed;
+    z-index: 1;
+
+    // Cover the whole screen
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+
+    &.sidebar-collapsed {
+      display: none;
+    }
   }
 }
 
