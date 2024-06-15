@@ -4,4 +4,4 @@
 
 This is basically a fancy spreadsheet for determining which crops are best to grow in Stardew Valley.
 
-**[Go to website](https://henryswanson.github.io/stardew-valley/)**
+**[Go to website!](https://henryswanson.github.io/stardew-valley/)**
