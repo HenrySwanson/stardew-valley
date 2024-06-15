@@ -226,6 +226,10 @@ body {
     filter: brightness(85%);
   }
 
+  tr {
+    cursor: pointer;
+  }
+
   th {
     padding: 0 10px;
     font-weight: bold;
@@ -234,16 +238,20 @@ body {
 }
 
 // Put arrows next to header while sorting
-table.sortable thead th[aria-sort="descending"]::after {
-  content: "▼";
-  color: currentcolor;
-  padding-left: 0.2em;
+table.sortable thead th {
+  cursor: pointer;
+  background-image: url(/stardew-valley/img/sort_neither.svg);
+  background-repeat: no-repeat;
+  background-position: center right;
+  padding-right: 21px;
 }
 
-table.sortable thead th[aria-sort="ascending"]::after {
-  content: "▲";
-  color: currentcolor;
-  padding-left: 0.2em;
+table.sortable thead th[aria-sort="ascending"] {
+  background-image: url(/stardew-valley/img/sort_asc.svg);
+}
+
+table.sortable thead th[aria-sort="descending"] {
+  background-image: url(/stardew-valley/img/sort_desc.svg);
 }
 
 // ============================================================================

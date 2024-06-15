@@ -239,14 +239,6 @@ function CropRow({
 }
 
 type SortDirection = "ascending" | "descending";
-function flipDirection(x: SortDirection): SortDirection {
-  switch (x) {
-    case "ascending":
-      return "descending";
-    case "descending":
-      return "ascending";
-  }
-}
 
 function CropTable({
   crop_data,
@@ -261,13 +253,21 @@ function CropTable({
 
   function handleClick(idx: number) {
     // Which way do we sort?
-    let dir: SortDirection;
-    if (currentSort !== null && currentSort[0] === idx) {
-      dir = flipDirection(currentSort[1]);
+
+    // If we're not the currently-selected column, seize control and sort ascending.
+    if (currentSort === null || currentSort[0] !== idx) {
+      setCurrentSort([idx, "ascending"]);
     } else {
-      dir = "ascending";
+      // Otherwise, rotate through ASC, DESC, NONE
+      switch (currentSort[1]) {
+        case "ascending":
+          setCurrentSort([idx, "descending"]);
+          break;
+        case "descending":
+          setCurrentSort(null);
+          break;
+      }
     }
-    setCurrentSort([idx, dir]);
   }
 
   function sortCropData(): CropData[] {
