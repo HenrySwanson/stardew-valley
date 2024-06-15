@@ -103,7 +103,8 @@ body {
 }
 
 // Hidden unless we're on a sufficiently small screen
-.settings-button, .settings-backdrop{
+.settings-button,
+.settings-backdrop {
   display: none;
 }
 
@@ -132,6 +133,12 @@ body {
 
   .settings-button {
     display: inline-block;
+    position: fixed;
+    z-index: 1;
+
+    // Put it in the lower left corner
+    top: 60px;
+    left: 10px;
   }
 
   .settings-backdrop {

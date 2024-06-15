@@ -731,7 +731,7 @@ function Root() {
   return (
     <>
       <button className="settings-button" onClick={() => setSidebarOpen(true)}>
-        Settings
+        <img src="/stardew-valley/img/Rusty_Cog.png" />
       </button>
       <div
         className={
