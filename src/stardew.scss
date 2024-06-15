@@ -240,18 +240,18 @@ body {
 // Put arrows next to header while sorting
 table.sortable thead th {
   cursor: pointer;
-  background-image: url(/stardew-valley/img/sort_neither.svg);
+  background-image: url(/img/sort_neither.svg);
   background-repeat: no-repeat;
   background-position: center right;
   padding-right: 21px;
 }
 
 table.sortable thead th[aria-sort="ascending"] {
-  background-image: url(/stardew-valley/img/sort_asc.svg);
+  background-image: url(/img/sort_asc.svg);
 }
 
 table.sortable thead th[aria-sort="descending"] {
-  background-image: url(/stardew-valley/img/sort_desc.svg);
+  background-image: url(/img/sort_desc.svg);
 }
 
 // ============================================================================
