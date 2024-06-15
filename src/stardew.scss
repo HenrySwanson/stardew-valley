@@ -222,6 +222,10 @@ body {
     color: #666;
   }
 
+  tr:hover td {
+    filter: brightness(85%);
+  }
+
   th {
     padding: 0 10px;
     font-weight: bold;
