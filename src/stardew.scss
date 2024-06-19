@@ -104,8 +104,26 @@ body {
 
 // Hidden unless we're on a sufficiently small screen
 .settings-button,
-.settings-backdrop {
+.settings-backdrop,
+.close-button {
   display: none;
+}
+
+// Pin to right corner of containing div
+.close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  background: none;
+  border: none;
+
+  color: #aaa;
+  font-size: 1.5rem;
+
+  &:hover {
+    color: $LIGHT_TEXT;
+  }
 }
 
 // If we're on a sufficiently small screen, change the layout
@@ -156,6 +174,10 @@ body {
     &.sidebar-collapsed {
       display: none;
     }
+  }
+
+  .close-button {
+    display: inline-block;
   }
 }
 

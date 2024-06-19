@@ -329,9 +329,11 @@ type Inputs = {
 function InputPanel({
   inputs,
   changeInputs,
+  onCloseClick,
 }: {
   inputs: Inputs;
   changeInputs: (inputs: Inputs) => void;
+  onCloseClick: () => void;
 }) {
   // Compute some values for things
   const quality = computeQuality(
@@ -498,6 +500,9 @@ function InputPanel({
   return (
     <>
       <h2>Settings</h2>
+      <button className="close-button" onClick={onCloseClick}>
+        &times;
+      </button>
       <hr />
       <div className="settings-clump">
         <label>
@@ -593,7 +598,13 @@ const DEFAULT_INPUTS: Inputs = {
   oil_checkbox: false,
 };
 
-function CropInfo({ crop_data }: { crop_data: CropData }) {
+function CropInfo({
+  crop_data,
+  onCloseClick,
+}: {
+  crop_data: CropData;
+  onCloseClick: () => void;
+}) {
   const def = crop_data.definition;
   const y = def.yield ?? 1;
   const seasons = def.season
@@ -639,6 +650,9 @@ function CropInfo({ crop_data }: { crop_data: CropData }) {
 
   return (
     <table className="crop-sidetable">
+      <button className="close-button" onClick={onCloseClick}>
+        &times;
+      </button>
       <thead>
         <tr>
           <th colSpan={2}>
@@ -746,7 +760,11 @@ function Root() {
           sidebarOpen ? "settings-panel" : "settings-panel sidebar-collapsed"
         }
       >
-        <InputPanel inputs={inputs} changeInputs={updateInputs}></InputPanel>
+        <InputPanel
+          inputs={inputs}
+          changeInputs={updateInputs}
+          onCloseClick={() => setSidebarOpen(false)}
+        ></InputPanel>
       </div>
       <div className="main-table">
         <CropTable
@@ -756,7 +774,10 @@ function Root() {
       </div>
       <div className="details-panel">
         {sidetable_data !== undefined && (
-          <CropInfo crop_data={sidetable_data}></CropInfo>
+          <CropInfo
+            crop_data={sidetable_data}
+            onCloseClick={() => setCropSelected(null)}
+          ></CropInfo>
         )}
       </div>
     </>
