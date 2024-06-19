@@ -525,12 +525,12 @@ function SettingsSidebar({
       </div>
 
       {/*things outside the normal layout flow*/}
-      <button
+      <div
         className="settings-button small-screen-only"
-        onClick={() => setSidebarOpen(true)}
+        onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         <img src="/stardew-valley/img/Rusty_Cog.png" />
-      </button>
+      </div>
       <div
         className={clsx(
           "settings-backdrop small-screen-only",
