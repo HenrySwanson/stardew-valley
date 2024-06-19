@@ -69,6 +69,8 @@ const QUALITY_STAR_ICONS: QualityVector<string> = {
   iridium: "Iridium_Quality.png",
 };
 
+const ALL_SEASONS = [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+
 // Some GUI helper stuff
 function InlineIcon({ src }: { src: string }) {
   const fullPath = import.meta.env.BASE_URL + "/img/" + src;
@@ -326,14 +328,12 @@ type Inputs = {
   oil_checkbox: boolean;
 };
 
-function InputPanel({
+function InputControls({
   inputs,
   changeInputs,
-  onCloseClick,
 }: {
   inputs: Inputs;
   changeInputs: (inputs: Inputs) => void;
-  onCloseClick: () => void;
 }) {
   // Compute some values for things
   const quality = computeQuality(
@@ -341,12 +341,26 @@ function InputPanel({
     inputs.fertilizer.quality
   );
 
-  const season_options = [
-    Season.SPRING,
-    Season.SUMMER,
-    Season.FALL,
-    Season.WINTER,
-  ].map((s) => {
+  type SpecificKeys<T, V> = {
+    [K in keyof T]: T[K] extends V ? K : never;
+  }[keyof T];
+
+  // Helper function for making checkboxes that modify the input
+  function makeCheckbox(
+    key: SpecificKeys<Inputs, boolean>,
+    enabled: boolean = true
+  ): JSX.Element {
+    return (
+      <input
+        type="checkbox"
+        checked={inputs[key]}
+        disabled={!enabled}
+        onChange={(e) => changeInputs({ ...inputs, [key]: e.target.checked })}
+      />
+    );
+  }
+
+  const season_options = ALL_SEASONS.map((s) => {
     const season_name = Season.toString(s);
     return <option value={season_name.toLowerCase()}>{season_name}</option>;
   });
@@ -371,43 +385,12 @@ function InputPanel({
     />
   );
 
-  const multiseason_checkbox = (
-    <input
-      type="checkbox"
-      checked={inputs.multiseason_checked}
-      onChange={(e) => {
-        changeInputs({ ...inputs, multiseason_checked: e.target.checked });
-      }}
-    />
-  );
-
-  const quality_checkbox = (
-    <input
-      type="checkbox"
-      checked={inputs.quality_checkbox}
-      onChange={(e) => {
-        changeInputs({ ...inputs, quality_checkbox: e.target.checked });
-      }}
-    />
-  );
-
   const farmer_level_input = (
     <input
       type="number"
       value={inputs.farming_level}
       onChange={(e) => {
         changeInputs({ ...inputs, farming_level: e.target.valueAsNumber });
-      }}
-    />
-  );
-
-  const tiller_checkbox = (
-    <input
-      type="checkbox"
-      disabled={inputs.farming_level < 5}
-      checked={inputs.tiller_checkbox}
-      onChange={(e) => {
-        changeInputs({ ...inputs, tiller_checkbox: e.target.checked });
       }}
     />
   );
@@ -467,43 +450,8 @@ function InputPanel({
     );
   }
 
-  const preserves_checkbox = (
-    <input
-      type="checkbox"
-      checked={inputs.preserves_jar_checkbox}
-      onChange={(e) => {
-        changeInputs({ ...inputs, preserves_jar_checkbox: e.target.checked });
-      }}
-    />
-  );
-
-  const kegs_checkbox = (
-    <input
-      type="checkbox"
-      checked={inputs.kegs_checkbox}
-      onChange={(e) => {
-        changeInputs({ ...inputs, kegs_checkbox: e.target.checked });
-      }}
-    />
-  );
-
-  const oil_checkbox = (
-    <input
-      type="checkbox"
-      checked={inputs.oil_checkbox}
-      onChange={(e) => {
-        changeInputs({ ...inputs, oil_checkbox: e.target.checked });
-      }}
-    />
-  );
-
   return (
     <>
-      <h2>Settings</h2>
-      <button className="close-button" onClick={onCloseClick}>
-        &times;
-      </button>
-      <hr />
       <div className="settings-clump">
         <label>
           <span className="settings-label">Season</span>
@@ -526,7 +474,8 @@ function InputPanel({
       <div className="settings-clump">
         <span className="settings-label">Level 5 Profession</span>
         <label className="settings-optionbox">
-          {tiller_checkbox} <IconTag src="Tiller.png">Tiller</IconTag>
+          {makeCheckbox("tiller_checkbox", inputs.farming_level >= 5)}{" "}
+          <IconTag src="Tiller.png">Tiller</IconTag>
         </label>
       </div>
       <div className="settings-clump">
@@ -550,24 +499,25 @@ function InputPanel({
       <div className="settings-clump">
         <span className="settings-label">Processing</span>
         <label className="settings-optionbox">
-          {preserves_checkbox}{" "}
+          {makeCheckbox("preserves_jar_checkbox")}{" "}
           <IconTag src="Preserves_Jar.png">Preserves Jar</IconTag>
         </label>
         <label className="settings-optionbox">
-          {kegs_checkbox} <IconTag src="Keg.png">Keg</IconTag>
+          {makeCheckbox("kegs_checkbox")} <IconTag src="Keg.png">Keg</IconTag>
         </label>
         <label className="settings-optionbox">
-          {oil_checkbox} <IconTag src="Oil_Maker.png">Oil Maker</IconTag>
+          {makeCheckbox("oil_checkbox")}{" "}
+          <IconTag src="Oil_Maker.png">Oil Maker</IconTag>
         </label>
       </div>
       <hr />
       <div className="settings-clump">
         <span className="settings-label">Miscellaneous</span>
         <label className="settings-optionbox">
-          {multiseason_checkbox} Cross-Season Crops?
+          {makeCheckbox("multiseason_checked")} Cross-Season Crops?
         </label>
         <label className="settings-optionbox">
-          {quality_checkbox} Enable Quality?
+          {makeCheckbox("quality_checkbox")} Enable Quality?
         </label>
         {inputs.quality_checkbox &&
           QUALITIES.map((q) => {
@@ -579,6 +529,44 @@ function InputPanel({
               </li>
             );
           })}
+      </div>
+    </>
+  );
+}
+
+function InputSidebar({
+  inputs,
+  changeInputs,
+}: {
+  inputs: Inputs;
+  changeInputs: (inputs: Inputs) => void;
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+
+  return (
+    <>
+      <button className="settings-button" onClick={() => setSidebarOpen(true)}>
+        <img src="/stardew-valley/img/Rusty_Cog.png" />
+      </button>
+      <div
+        className={
+          sidebarOpen
+            ? "settings-backdrop"
+            : "settings-backdrop sidebar-collapsed"
+        }
+        onClick={() => setSidebarOpen(false)}
+      />
+      <div
+        className={
+          sidebarOpen ? "settings-panel" : "settings-panel sidebar-collapsed"
+        }
+      >
+        <h2>Settings</h2>
+        <button className="close-button" onClick={() => setSidebarOpen(false)}>
+          &times;
+        </button>
+        <hr />
+        <InputControls inputs={inputs} changeInputs={changeInputs} />
       </div>
     </>
   );
@@ -675,7 +663,6 @@ function CropInfo({
 function Root() {
   const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS);
   const [cropSelected, setCropSelected] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   function updateInputs(i: Inputs) {
     // Do some quick massaging of the input data.
@@ -744,40 +731,16 @@ function Root() {
 
   return (
     <>
-      <button className="settings-button" onClick={() => setSidebarOpen(true)}>
-        <img src="/stardew-valley/img/Rusty_Cog.png" />
-      </button>
-      <div
-        className={
-          sidebarOpen
-            ? "settings-backdrop"
-            : "settings-backdrop sidebar-collapsed"
-        }
-        onClick={() => setSidebarOpen(false)}
-      />
-      <div
-        className={
-          sidebarOpen ? "settings-panel" : "settings-panel sidebar-collapsed"
-        }
-      >
-        <InputPanel
-          inputs={inputs}
-          changeInputs={updateInputs}
-          onCloseClick={() => setSidebarOpen(false)}
-        ></InputPanel>
-      </div>
+      <InputSidebar inputs={inputs} changeInputs={updateInputs} />
       <div className="main-table">
-        <CropTable
-          crop_data={crop_data}
-          on_row_click={updateInfoBox}
-        ></CropTable>
+        <CropTable crop_data={crop_data} on_row_click={updateInfoBox} />
       </div>
       <div className="details-panel">
         {sidetable_data !== undefined && (
           <CropInfo
             crop_data={sidetable_data}
             onCloseClick={() => setCropSelected(null)}
-          ></CropInfo>
+          />
         )}
       </div>
     </>
