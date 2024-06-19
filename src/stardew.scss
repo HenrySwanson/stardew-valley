@@ -102,13 +102,6 @@ body {
   }
 }
 
-// Hidden unless we're on a sufficiently small screen
-.settings-button,
-.settings-backdrop,
-.close-button {
-  display: none;
-}
-
 // Pin to right corner of containing div
 .close-button {
   position: absolute;
@@ -124,6 +117,20 @@ body {
   &:hover {
     color: $LIGHT_TEXT;
   }
+}
+
+// Spaces the settings apart
+.settings-clump {
+  margin: 10px 0;
+}
+
+.settings-annotation {
+  font-size: small;
+}
+
+// Forces checkboxes and such to be on separate lines
+.settings-optionbox {
+  display: block;
 }
 
 // If we're on a sufficiently small screen, change the layout
@@ -181,18 +188,11 @@ body {
   }
 }
 
-// Spaces the settings apart
-.settings-clump {
-  margin: 10px 0;
-}
-
-.settings-label {
-  font-size: small;
-}
-
-// Forces checkboxes and such to be on separate lines
-.settings-optionbox {
-  display: block;
+@media (min-width: 1351px) {
+  // Hidden unless we're on a sufficiently small screen
+  .small-screen-only {
+    display: none;
+  }
 }
 
 // ============================================================================

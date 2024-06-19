@@ -16,6 +16,7 @@ import {
 } from "./crops";
 import "./stardew.scss";
 
+import { clsx } from "clsx";
 import { ReactNode, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -102,10 +103,6 @@ function TimeTag({ days }: { days: number }) {
 
 function GoodTag({ name }: { name: string }) {
   return <IconTag src={getIconPath(name)}>{name}</IconTag>;
-}
-
-function enableIf(enabled: boolean) {
-  return enabled ? undefined : "disabled";
 }
 
 function getIconPath(name: string): string {
@@ -232,7 +229,7 @@ function CropRow({
   // Disable a row if it can't be harvested this season
   return (
     <tr
-      className={enableIf(crop_data.num_harvests > 0)}
+      className={clsx(crop_data.num_harvests === 0 && "disabled")}
       onClick={() => on_click(crop_data.definition.name)}
     >
       {cells}
@@ -454,39 +451,39 @@ function InputControls({
     <>
       <div className="settings-clump">
         <label>
-          <span className="settings-label">Season</span>
+          <span className="settings-annotation">Season</span>
           {season_select}
         </label>
       </div>
       <div className="settings-clump">
         <label>
-          <span className="settings-label">Day (1-28)</span>
+          <span className="settings-annotation">Day (1-28)</span>
           {day_input}
         </label>
       </div>
       <hr />
       <div className="settings-clump">
-        <label className="settings-clump">
-          <span className="settings-label">Farming Level</span>
+        <label>
+          <span className="settings-annotation">Farming Level</span>
           {farmer_level_input}
         </label>
       </div>
       <div className="settings-clump">
-        <span className="settings-label">Level 5 Profession</span>
+        <span className="settings-annotation">Level 5 Profession</span>
         <label className="settings-optionbox">
           {makeCheckbox("tiller_checkbox", inputs.farming_level >= 5)}{" "}
           <IconTag src="Tiller.png">Tiller</IconTag>
         </label>
       </div>
       <div className="settings-clump">
-        <span className="settings-label">Level 10 Profession</span>
+        <span className="settings-annotation">Level 10 Profession</span>
         {makeLvl10Radio("agriculturist", "Agriculturist.png")}
         {makeLvl10Radio("artisan", "Artisan.png")}
         {makeLvl10Radio("other", "Question.png")}
       </div>
       <hr />
       <div className="settings-clump">
-        <span className="settings-label">Fertilizer</span>
+        <span className="settings-annotation">Fertilizer</span>
         {makeFertilizerRadioButton("None", null, null, "Blank.png")}
         {makeFertilizerRadioButton("Basic Fertilizer", "basic", null)}
         {makeFertilizerRadioButton("Quality Fertilizer", "quality", null)}
@@ -497,7 +494,7 @@ function InputControls({
       </div>
       <hr />
       <div className="settings-clump">
-        <span className="settings-label">Processing</span>
+        <span className="settings-annotation">Processing</span>
         <label className="settings-optionbox">
           {makeCheckbox("preserves_jar_checkbox")}{" "}
           <IconTag src="Preserves_Jar.png">Preserves Jar</IconTag>
@@ -512,7 +509,7 @@ function InputControls({
       </div>
       <hr />
       <div className="settings-clump">
-        <span className="settings-label">Miscellaneous</span>
+        <span className="settings-annotation">Miscellaneous</span>
         <label className="settings-optionbox">
           {makeCheckbox("multiseason_checked")} Cross-Season Crops?
         </label>
@@ -545,29 +542,34 @@ function InputSidebar({
 
   return (
     <>
-      <button className="settings-button" onClick={() => setSidebarOpen(true)}>
-        <img src="/stardew-valley/img/Rusty_Cog.png" />
-      </button>
       <div
-        className={
-          sidebarOpen
-            ? "settings-backdrop"
-            : "settings-backdrop sidebar-collapsed"
-        }
-        onClick={() => setSidebarOpen(false)}
-      />
-      <div
-        className={
-          sidebarOpen ? "settings-panel" : "settings-panel sidebar-collapsed"
-        }
+        className={clsx("settings-panel", !sidebarOpen && "sidebar-collapsed")}
       >
         <h2>Settings</h2>
-        <button className="close-button" onClick={() => setSidebarOpen(false)}>
+        <button
+          className="close-button small-screen-only"
+          onClick={() => setSidebarOpen(false)}
+        >
           &times;
         </button>
         <hr />
         <InputControls inputs={inputs} changeInputs={changeInputs} />
       </div>
+
+      {/*things outside the normal layout flow*/}
+      <button
+        className="settings-button small-screen-only"
+        onClick={() => setSidebarOpen(true)}
+      >
+        <img src="/stardew-valley/img/Rusty_Cog.png" />
+      </button>
+      <div
+        className={clsx(
+          "settings-backdrop small-screen-only",
+          !sidebarOpen && "sidebar-collapsed"
+        )}
+        onClick={() => setSidebarOpen(false)}
+      />
     </>
   );
 }
