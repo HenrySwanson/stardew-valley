@@ -53,7 +53,7 @@ export namespace Season {
 
 export type Quality = "normal" | "silver" | "gold" | "iridium";
 
-export type Level10Profession = "artisan" | "agriculturist" | "other";
+export type Level10Profession = "artisan" | "agriculturist";
 
 export type QualityFertilizer = "basic" | "quality" | "deluxe";
 export type SpeedGro = "basic" | "deluxe" | "hyper";

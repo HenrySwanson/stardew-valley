@@ -5,7 +5,7 @@ import {
   Season,
   computeQuality,
   calculate,
-  Scenario as Scenario,
+  Scenario,
   ProcessingType,
   QualityVector,
   Level10Profession,
@@ -328,6 +328,16 @@ type Settings = {
   oil_checkbox: boolean;
 };
 
+function tillerEligible(settings: Settings): boolean {
+  return settings.farming_level >= 5;
+}
+
+function level10Eligible(settings: Settings): boolean {
+  // The only level 10 professions relevant to this calculator
+  // are those that are downstream of Tiller.
+  return settings.farming_level >= 10 && settings.tiller_checkbox;
+}
+
 function SettingControls({
   settings,
   changeSettings,
@@ -384,7 +394,7 @@ function SettingControls({
           type="radio"
           name="level-10-profession"
           value={profession}
-          disabled={settings.farming_level < 10}
+          disabled={!level10Eligible(settings)}
           checked={settings.level_10_profession == profession}
           onChange={() => {
             changeSettings({ ...settings, level_10_profession: profession });
@@ -439,7 +449,7 @@ function SettingControls({
       <div className="settings-clump">
         <span className="settings-annotation">Level 5 Profession</span>
         <label className="settings-optionbox">
-          {makeCheckbox("tiller_checkbox", settings.farming_level >= 5)}{" "}
+          {makeCheckbox("tiller_checkbox", tillerEligible(settings))}{" "}
           <IconTag src="Tiller.png">Tiller</IconTag>
         </label>
       </div>
@@ -447,7 +457,6 @@ function SettingControls({
         <span className="settings-annotation">Level 10 Profession</span>
         {makeLvl10Radio("agriculturist", "Agriculturist.png")}
         {makeLvl10Radio("artisan", "Artisan.png")}
-        {makeLvl10Radio("other", "Question.png")}
       </div>
       <hr />
       <div className="settings-clump">
@@ -720,10 +729,10 @@ function Root() {
     start_day: day.start_day,
     multiseason_enabled: settings.multiseason_checked,
     quality_probabilities: settings.quality_checkbox ? quality : null,
-    tiller_skill_chosen:
-      settings.farming_level >= 5 && settings.tiller_checkbox,
-    level_10_profession:
-      settings.farming_level >= 10 ? settings.level_10_profession : null,
+    tiller_skill_chosen: tillerEligible(settings) && settings.tiller_checkbox,
+    level_10_profession: level10Eligible(settings)
+      ? settings.level_10_profession
+      : null,
     fertilizer: settings.fertilizer,
     preserves_jar_enabled: settings.preserves_jar_checkbox,
     kegs_enabled: settings.kegs_checkbox,
