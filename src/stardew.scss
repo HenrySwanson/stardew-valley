@@ -71,6 +71,35 @@ body {
   width: fit-content;
 }
 
+.main-body {
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 100vw;
+}
+
+// ============================================================================
+// Day controls
+// ============================================================================
+
+.day-controls {
+  margin-top: 10px;
+  display: flex;
+  column-gap: 20px;
+  padding: 0 20px;
+
+  * {
+    flex: 1;
+  }
+
+  // Makes them stretch out to the width of the sidebar
+  & input[type="number"],
+  select {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+  }
+}
+
 // ============================================================================
 // Settings sidebar
 // ============================================================================
@@ -200,9 +229,6 @@ body {
 // ============================================================================
 
 .main-table {
-  // Centers the div
-  margin: 0 auto;
-  max-width: fit-content;
   overflow-x: auto;
   padding: 10px;
 

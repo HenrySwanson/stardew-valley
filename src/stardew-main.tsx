@@ -311,9 +311,12 @@ function CropTable({
   );
 }
 
-type Inputs = {
+type Day = {
   season: Season;
   start_day: number;
+};
+
+type Inputs = {
   multiseason_checked: boolean;
   quality_checkbox: boolean;
   farming_level: number;
@@ -338,6 +341,7 @@ function InputControls({
     inputs.fertilizer.quality
   );
 
+  // Helper type
   type SpecificKeys<T, V> = {
     [K in keyof T]: T[K] extends V ? K : never;
   }[keyof T];
@@ -356,31 +360,6 @@ function InputControls({
       />
     );
   }
-
-  const season_options = ALL_SEASONS.map((s) => {
-    const season_name = Season.toString(s);
-    return <option value={season_name.toLowerCase()}>{season_name}</option>;
-  });
-  const season_select = (
-    <select
-      value={Season[inputs.season].toLowerCase()}
-      onChange={(e) => {
-        changeInputs({ ...inputs, season: Season.fromString(e.target.value) });
-      }}
-    >
-      {season_options}
-    </select>
-  );
-
-  const day_input = (
-    <input
-      type="number"
-      value={inputs.start_day}
-      onChange={(e) => {
-        changeInputs({ ...inputs, start_day: e.target.valueAsNumber });
-      }}
-    />
-  );
 
   const farmer_level_input = (
     <input
@@ -449,19 +428,6 @@ function InputControls({
 
   return (
     <>
-      <div className="settings-clump">
-        <label>
-          <span className="settings-annotation">Season</span>
-          {season_select}
-        </label>
-      </div>
-      <div className="settings-clump">
-        <label>
-          <span className="settings-annotation">Day (1-28)</span>
-          {day_input}
-        </label>
-      </div>
-      <hr />
       <div className="settings-clump">
         <label>
           <span className="settings-annotation">Farming Level</span>
@@ -574,9 +540,58 @@ function InputSidebar({
   );
 }
 
-const DEFAULT_INPUTS: Inputs = {
+function DayControls({
+  day,
+  changeDay,
+}: {
+  day: Day;
+  changeDay: (day: Day) => void;
+}): JSX.Element {
+  const season_options = ALL_SEASONS.map((s) => {
+    const season_name = Season.toString(s);
+    return <option value={season_name.toLowerCase()}>{season_name}</option>;
+  });
+  const season_select = (
+    <select
+      value={Season[day.season].toLowerCase()}
+      onChange={(e) => {
+        changeDay({ ...day, season: Season.fromString(e.target.value) });
+      }}
+    >
+      {season_options}
+    </select>
+  );
+
+  const day_input = (
+    <input
+      type="number"
+      value={day.start_day}
+      onChange={(e) => {
+        changeDay({ ...day, start_day: e.target.valueAsNumber });
+      }}
+    />
+  );
+
+  return (
+    <>
+      <label>
+        <div className="settings-annotation"><b>Season</b></div>
+        {season_select}
+      </label>
+      <label>
+        <div className="settings-annotation"><b>Day (1-28)</b></div>
+        {day_input}
+      </label>
+    </>
+  );
+}
+
+const DEFAULT_DAY: Day = {
   season: Season.SPRING,
   start_day: 1,
+};
+
+const DEFAULT_INPUTS: Inputs = {
   multiseason_checked: true,
   quality_checkbox: false,
   farming_level: 0,
@@ -663,23 +678,28 @@ function CropInfo({
 }
 
 function Root() {
+  const [day, setDay] = useState<Day>(DEFAULT_DAY);
   const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS);
   const [cropSelected, setCropSelected] = useState<string | null>(null);
+
+  function updateDay(day: Day) {
+    // When the user ticks the season too far, wrap around and bump the season, for nice UX.
+    if (day.start_day <= 0) {
+      day.start_day = 28;
+      day.season = (day.season + 3) % 4;
+    } else if (day.start_day > 28) {
+      day.start_day = 1;
+      day.season = (day.season + 1) % 4;
+    }
+
+    setDay(day);
+  }
 
   function updateInputs(i: Inputs) {
     // Do some quick massaging of the input data.
 
     // You can get skills above 10 using food. Wiki claims 14 is max.
     i.farming_level = clamp(i.farming_level, 0, 14);
-
-    // When the user ticks the season too far, wrap around and bump the season, for nice UX.
-    if (i.start_day <= 0) {
-      i.start_day = 28;
-      i.season = (i.season + 3) % 4;
-    } else if (i.start_day > 28) {
-      i.start_day = 1;
-      i.season = (i.season + 1) % 4;
-    }
 
     setInputs(i);
   }
@@ -690,8 +710,8 @@ function Root() {
     inputs.fertilizer.quality
   );
   const settings: Settings = {
-    season: inputs.season,
-    start_day: inputs.start_day,
+    season: day.season,
+    start_day: day.start_day,
     multiseason_enabled: inputs.multiseason_checked,
     quality_probabilities: inputs.quality_checkbox ? quality : null,
     tiller_skill_chosen: inputs.farming_level >= 5 && inputs.tiller_checkbox,
@@ -720,7 +740,7 @@ function Root() {
   );
 
   // Change style of whole document
-  document.documentElement.className = Season[inputs.season].toLowerCase();
+  document.documentElement.className = Season[day.season].toLowerCase();
 
   // Handler for the box on the RHS
   function updateInfoBox(crop_name: string) {
@@ -734,8 +754,13 @@ function Root() {
   return (
     <>
       <InputSidebar inputs={inputs} changeInputs={updateInputs} />
-      <div className="main-table">
-        <CropTable crop_data={crop_data} on_row_click={updateInfoBox} />
+      <div className="main-body">
+        <div className="day-controls">
+          <DayControls day={day} changeDay={updateDay} />
+        </div>
+        <div className="main-table">
+          <CropTable crop_data={crop_data} on_row_click={updateInfoBox} />
+        </div>
       </div>
       <div className="details-panel">
         {sidetable_data !== undefined && (
