@@ -209,7 +209,7 @@ export function computeQuality(
   return { normal, silver, gold, iridium };
 }
 
-export type Settings = {
+export type Scenario = {
   season: Season;
   start_day: number;
   multiseason_enabled: boolean;
@@ -514,17 +514,17 @@ export function getProceedsFromOilMaker(
 
 export function calculate(
   crop: CropDefinition,
-  settings: Settings
+  scenario: Scenario
 ): CropData | "out-of-season" {
-  const is_agriculturist = settings.level_10_profession === "agriculturist";
+  const is_agriculturist = scenario.level_10_profession === "agriculturist";
 
   // How many harvests do we get, if any?
   const harvests = getNumberOfHarvests(
     crop,
-    settings.season,
-    settings.start_day,
-    settings.multiseason_enabled,
-    settings.fertilizer.speedgro,
+    scenario.season,
+    scenario.start_day,
+    scenario.multiseason_enabled,
+    scenario.fertilizer.speedgro,
     is_agriculturist
   );
 
@@ -533,7 +533,7 @@ export function calculate(
   }
 
   // How many crops of each quality do we expect to get, in total.
-  const quality_probabilities = settings.quality_probabilities ?? NO_QUALITY;
+  const quality_probabilities = scenario.quality_probabilities ?? NO_QUALITY;
   const per_harvest = getExpectedCropsPerHarvest(crop, quality_probabilities);
   const total_crops_by_quality = qualityMap(
     per_harvest,
@@ -542,26 +542,26 @@ export function calculate(
   const total_crops = qualitySum(total_crops_by_quality);
 
   // Now we have a bunch of crops. What is the most profitable thing to do with them?
-  const is_artisan = settings.level_10_profession === "artisan";
+  const is_artisan = scenario.level_10_profession === "artisan";
   const raw_proceeds = getProceedsFromRaw(
     crop,
     total_crops_by_quality,
-    settings.tiller_skill_chosen
+    scenario.tiller_skill_chosen
   );
   const other_options: [ProcessingType, Proceeds | null][] = [];
-  if (settings.preserves_jar_enabled) {
+  if (scenario.preserves_jar_enabled) {
     other_options.push([
       "preserves",
       getProceedsFromPreservesJar(crop, total_crops, is_artisan),
     ]);
   }
-  if (settings.kegs_enabled) {
+  if (scenario.kegs_enabled) {
     other_options.push([
       "keg",
       getProceedsFromKeg(crop, total_crops, is_artisan),
     ]);
   }
-  if (settings.oil_maker_enabled) {
+  if (scenario.oil_maker_enabled) {
     other_options.push(["oil", getProceedsFromOilMaker(crop, total_crops)]);
   }
 
@@ -587,7 +587,7 @@ export function calculate(
     useful_days: harvests.duration,
     growth_period: getModifiedGrowthPeriod(
       crop.days_to_grow,
-      settings.fertilizer.speedgro,
+      scenario.fertilizer.speedgro,
       is_agriculturist
     ),
     num_harvests: harvests.number,
@@ -595,7 +595,7 @@ export function calculate(
     crop_proceeds: getVectorProceedsFromRaw(
       crop,
       total_crops_by_quality,
-      settings.tiller_skill_chosen
+      scenario.tiller_skill_chosen
     ),
     processing_type: best_processing[0],
     proceeds: best_processing[1],

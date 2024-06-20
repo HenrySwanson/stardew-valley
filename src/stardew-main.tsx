@@ -5,7 +5,7 @@ import {
   Season,
   computeQuality,
   calculate,
-  Settings,
+  Scenario as Scenario,
   ProcessingType,
   QualityVector,
   Level10Profession,
@@ -316,7 +316,7 @@ type Day = {
   start_day: number;
 };
 
-type Inputs = {
+type Settings = {
   multiseason_checked: boolean;
   quality_checkbox: boolean;
   farming_level: number;
@@ -328,17 +328,17 @@ type Inputs = {
   oil_checkbox: boolean;
 };
 
-function InputControls({
-  inputs,
-  changeInputs,
+function SettingControls({
+  settings,
+  changeSettings,
 }: {
-  inputs: Inputs;
-  changeInputs: (inputs: Inputs) => void;
+  settings: Settings;
+  changeSettings: (settings: Settings) => void;
 }) {
   // Compute some values for things
   const quality = computeQuality(
-    inputs.farming_level,
-    inputs.fertilizer.quality
+    settings.farming_level,
+    settings.fertilizer.quality
   );
 
   // Helper type
@@ -346,17 +346,19 @@ function InputControls({
     [K in keyof T]: T[K] extends V ? K : never;
   }[keyof T];
 
-  // Helper function for making checkboxes that modify the input
+  // Helper function for making checkboxes that modify the settings
   function makeCheckbox(
-    key: SpecificKeys<Inputs, boolean>,
+    key: SpecificKeys<Settings, boolean>,
     enabled: boolean = true
   ): JSX.Element {
     return (
       <input
         type="checkbox"
-        checked={inputs[key]}
+        checked={settings[key]}
         disabled={!enabled}
-        onChange={(e) => changeInputs({ ...inputs, [key]: e.target.checked })}
+        onChange={(e) =>
+          changeSettings({ ...settings, [key]: e.target.checked })
+        }
       />
     );
   }
@@ -364,9 +366,9 @@ function InputControls({
   const farmer_level_input = (
     <input
       type="number"
-      value={inputs.farming_level}
+      value={settings.farming_level}
       onChange={(e) => {
-        changeInputs({ ...inputs, farming_level: e.target.valueAsNumber });
+        changeSettings({ ...settings, farming_level: e.target.valueAsNumber });
       }}
     />
   );
@@ -382,10 +384,10 @@ function InputControls({
           type="radio"
           name="level-10-profession"
           value={profession}
-          disabled={inputs.farming_level < 10}
-          checked={inputs.level_10_profession == profession}
+          disabled={settings.farming_level < 10}
+          checked={settings.level_10_profession == profession}
           onChange={() => {
-            changeInputs({ ...inputs, level_10_profession: profession });
+            changeSettings({ ...settings, level_10_profession: profession });
           }}
         />
         <IconTag src={icon_src ?? getIconPath(titleCaseName)}>
@@ -408,12 +410,12 @@ function InputControls({
           name="fertilizer"
           value={quality + "-" + speedgro}
           checked={
-            inputs.fertilizer.quality === quality &&
-            inputs.fertilizer.speedgro === speedgro
+            settings.fertilizer.quality === quality &&
+            settings.fertilizer.speedgro === speedgro
           }
           onChange={() => {
-            changeInputs({
-              ...inputs,
+            changeSettings({
+              ...settings,
               fertilizer: {
                 quality,
                 speedgro,
@@ -437,7 +439,7 @@ function InputControls({
       <div className="settings-clump">
         <span className="settings-annotation">Level 5 Profession</span>
         <label className="settings-optionbox">
-          {makeCheckbox("tiller_checkbox", inputs.farming_level >= 5)}{" "}
+          {makeCheckbox("tiller_checkbox", settings.farming_level >= 5)}{" "}
           <IconTag src="Tiller.png">Tiller</IconTag>
         </label>
       </div>
@@ -482,7 +484,7 @@ function InputControls({
         <label className="settings-optionbox">
           {makeCheckbox("quality_checkbox")} Enable Quality?
         </label>
-        {inputs.quality_checkbox &&
+        {settings.quality_checkbox &&
           QUALITIES.map((q) => {
             const pct = quality[q] * 100;
             const icon = QUALITY_STAR_ICONS[q];
@@ -497,12 +499,12 @@ function InputControls({
   );
 }
 
-function InputSidebar({
-  inputs,
-  changeInputs,
+function SettingsSidebar({
+  settings,
+  changeSettings,
 }: {
-  inputs: Inputs;
-  changeInputs: (inputs: Inputs) => void;
+  settings: Settings;
+  changeSettings: (settings: Settings) => void;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
@@ -519,7 +521,7 @@ function InputSidebar({
           &times;
         </button>
         <hr />
-        <InputControls inputs={inputs} changeInputs={changeInputs} />
+        <SettingControls settings={settings} changeSettings={changeSettings} />
       </div>
 
       {/*things outside the normal layout flow*/}
@@ -575,11 +577,15 @@ function DayControls({
   return (
     <>
       <label>
-        <div className="settings-annotation"><b>Season</b></div>
+        <div className="settings-annotation">
+          <b>Season</b>
+        </div>
         {season_select}
       </label>
       <label>
-        <div className="settings-annotation"><b>Day (1-28)</b></div>
+        <div className="settings-annotation">
+          <b>Day (1-28)</b>
+        </div>
         {day_input}
       </label>
     </>
@@ -591,7 +597,7 @@ const DEFAULT_DAY: Day = {
   start_day: 1,
 };
 
-const DEFAULT_INPUTS: Inputs = {
+const DEFAULT_SETTINGS: Settings = {
   multiseason_checked: true,
   quality_checkbox: false,
   farming_level: 0,
@@ -679,7 +685,7 @@ function CropInfo({
 
 function Root() {
   const [day, setDay] = useState<Day>(DEFAULT_DAY);
-  const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS);
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [cropSelected, setCropSelected] = useState<string | null>(null);
 
   function updateDay(day: Day) {
@@ -695,39 +701,40 @@ function Root() {
     setDay(day);
   }
 
-  function updateInputs(i: Inputs) {
+  function updateSettings(s: Settings) {
     // Do some quick massaging of the input data.
 
     // You can get skills above 10 using food. Wiki claims 14 is max.
-    i.farming_level = clamp(i.farming_level, 0, 14);
+    s.farming_level = clamp(s.farming_level, 0, 14);
 
-    setInputs(i);
+    setSettings(s);
   }
 
-  // Construct the settings
+  // Construct the inputs
   const quality = computeQuality(
-    inputs.farming_level,
-    inputs.fertilizer.quality
+    settings.farming_level,
+    settings.fertilizer.quality
   );
-  const settings: Settings = {
+  const scenario: Scenario = {
     season: day.season,
     start_day: day.start_day,
-    multiseason_enabled: inputs.multiseason_checked,
-    quality_probabilities: inputs.quality_checkbox ? quality : null,
-    tiller_skill_chosen: inputs.farming_level >= 5 && inputs.tiller_checkbox,
+    multiseason_enabled: settings.multiseason_checked,
+    quality_probabilities: settings.quality_checkbox ? quality : null,
+    tiller_skill_chosen:
+      settings.farming_level >= 5 && settings.tiller_checkbox,
     level_10_profession:
-      inputs.farming_level >= 10 ? inputs.level_10_profession : null,
-    fertilizer: inputs.fertilizer,
-    preserves_jar_enabled: inputs.preserves_jar_checkbox,
-    kegs_enabled: inputs.kegs_checkbox,
-    oil_maker_enabled: inputs.oil_checkbox,
+      settings.farming_level >= 10 ? settings.level_10_profession : null,
+    fertilizer: settings.fertilizer,
+    preserves_jar_enabled: settings.preserves_jar_checkbox,
+    kegs_enabled: settings.kegs_checkbox,
+    oil_maker_enabled: settings.oil_checkbox,
   };
 
   // Go through all the crops and generate some rows to draw
   const crop_data = [];
   for (const def of CROP_DEFINITIONS) {
     // Filter to crops that are in-season
-    const data = calculate(def, settings);
+    const data = calculate(def, scenario);
     if (data == "out-of-season") {
       continue;
     }
@@ -753,7 +760,7 @@ function Root() {
 
   return (
     <>
-      <InputSidebar inputs={inputs} changeInputs={updateInputs} />
+      <SettingsSidebar settings={settings} changeSettings={updateSettings} />
       <div className="main-body">
         <div className="day-controls">
           <DayControls day={day} changeDay={updateDay} />
