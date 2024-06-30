@@ -10,6 +10,7 @@ import {
   getProceedsFromKeg,
   getProceedsFromRaw,
   Proceeds,
+  ScenarioType,
 } from "./crops";
 
 function getCrop(name: string): CropDefinition {
@@ -18,6 +19,14 @@ function getCrop(name: string): CropDefinition {
     throw new Error("Crop " + name + " not found!");
   }
   return crop;
+}
+
+function makeScenario(season: Season, day: number): ScenarioType {
+  return {
+    kind: "season",
+    season,
+    start_day: day,
+  };
 }
 
 describe("number of harvests", () => {
@@ -30,7 +39,13 @@ describe("number of harvests", () => {
     duration: number
   ) {
     expect(
-      getNumberOfHarvests(crop, season, day, multiseason_enabled, null, false)
+      getNumberOfHarvests(
+        crop,
+        makeScenario(season, day),
+        multiseason_enabled,
+        null,
+        false
+      )
     ).toStrictEqual({
       number: num_harvests,
       duration,
@@ -49,7 +64,13 @@ describe("number of harvests", () => {
     expectHelper(cauliflower, Season.SPRING, 16, false, 1, 12);
     expectHelper(cauliflower, Season.SPRING, 17, false, 0, 0);
     expect(
-      getNumberOfHarvests(cauliflower, Season.SUMMER, 1, false, null, false)
+      getNumberOfHarvests(
+        cauliflower,
+        makeScenario(Season.SUMMER, 1),
+        false,
+        null,
+        false
+      )
     ).toBe("out-of-season");
   });
 
@@ -70,7 +91,13 @@ describe("number of harvests", () => {
     expectHelper(strawberry, Season.SPRING, 21, false, 0, 0);
     // Out of season (different from no harvest!)
     expect(
-      getNumberOfHarvests(strawberry, Season.SUMMER, 1, false, null, false)
+      getNumberOfHarvests(
+        strawberry,
+        makeScenario(Season.SUMMER, 1),
+        false,
+        null,
+        false
+      )
     ).toBe("out-of-season");
   });
 
@@ -112,16 +139,40 @@ describe("number of harvests", () => {
 
     // It also won't grow in the wrong season at all
     expect(
-      getNumberOfHarvests(sunflower, Season.SPRING, 1, true, null, false)
+      getNumberOfHarvests(
+        sunflower,
+        makeScenario(Season.SPRING, 1),
+        true,
+        null,
+        false
+      )
     ).toBe("out-of-season");
     expect(
-      getNumberOfHarvests(sunflower, Season.SPRING, 28, true, null, false)
+      getNumberOfHarvests(
+        sunflower,
+        makeScenario(Season.SPRING, 28),
+        true,
+        null,
+        false
+      )
     ).toBe("out-of-season");
-    expect(getNumberOfHarvests(corn, Season.SPRING, 1, true, null, false)).toBe(
-      "out-of-season"
-    );
     expect(
-      getNumberOfHarvests(corn, Season.SPRING, 28, true, null, false)
+      getNumberOfHarvests(
+        corn,
+        makeScenario(Season.SPRING, 1),
+        true,
+        null,
+        false
+      )
+    ).toBe("out-of-season");
+    expect(
+      getNumberOfHarvests(
+        corn,
+        makeScenario(Season.SPRING, 28),
+        true,
+        null,
+        false
+      )
     ).toBe("out-of-season");
   });
 

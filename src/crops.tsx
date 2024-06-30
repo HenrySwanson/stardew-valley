@@ -209,9 +209,21 @@ export function computeQuality(
   return { normal, silver, gold, iridium };
 }
 
-export type Scenario = {
+export type ScenarioType = ScenarioTypeSeason | ScenarioTypeGreenhouse;
+
+export type ScenarioTypeSeason = {
+  kind: "season";
   season: Season;
   start_day: number;
+};
+
+export type ScenarioTypeGreenhouse = {
+  kind: "greenhouse";
+  num_seasons: number;
+};
+
+export type Scenario = {
+  start: ScenarioType;
   multiseason_enabled: boolean;
   quality_probabilities: QualityVector<number> | null;
   tiller_skill_chosen: boolean;
@@ -227,14 +239,12 @@ type Harvests = {
   duration: number;
 };
 
-export function getNumberOfHarvests(
+function getNumDaysRemaining(
   crop: CropDefinition,
   current_season: Season,
   current_day: number,
-  multiseason_enabled: boolean,
-  speedgro: SpeedGro | null,
-  is_agriculturist: boolean
-): Harvests | "out-of-season" {
+  multiseason_enabled: boolean
+): number | "out-of-season" {
   // When is this crop in-season?
   // Note: Cactus Fruit has no season; watch out for that!
   if (!crop.season) {
@@ -251,13 +261,35 @@ export function getNumberOfHarvests(
     return "out-of-season";
   }
 
-  // How many days do we have left?
+  // Otherwise, figure out how many (partial) seasons
+  // remain, and subtract off the days we've already lost.
   const seasons_left = multiseason_enabled
     ? seasons.length - seasons.indexOf(current_season)
     : 1;
-  const days_left = 28 * seasons_left - current_day;
+  return 28 * seasons_left - current_day;
+}
 
-  // In the number of days remaining, how many harvests do we get?
+export function getNumberOfHarvests(
+  crop: CropDefinition,
+  start: ScenarioType,
+  multiseason_enabled: boolean,
+  speedgro: SpeedGro | null,
+  is_agriculturist: boolean
+): Harvests | "out-of-season" {
+  const days_left =
+    start.kind === "greenhouse"
+      ? start.num_seasons * 28 - 1  // ignore first day
+      : getNumDaysRemaining(
+          crop,
+          start.season,
+          start.start_day,
+          multiseason_enabled
+        );
+
+  if (days_left === "out-of-season") {
+    return "out-of-season";
+  }
+
   if (!crop.special_handling) {
     let num_harvests = 0;
     let useful_days = 0;
@@ -285,20 +317,28 @@ export function getNumberOfHarvests(
     };
   } else if (crop.special_handling == "tea") {
     // Is this tea? If so, skip all that; compute it differently.
+    // Note that Tea is not affected by Agriculturist.
 
-    // First figure out how many we get during the first season.
-    // Note that this is not affected by Agriculturist.
-    const becomes_bush_at = current_day + crop.days_to_grow;
-    const leaves_harvested_first_season = Math.max(
-      0, // can't go negative!
-      28 - Math.max(21, becomes_bush_at) // half-inclusive; tea bush does not produce on first day
-    );
-    // ^^ TODO: if i plant on the 1st, it becomes a bush on the 21st, and produces on the 2nd.
-    // if i plant on the 2nd, it becomes a bush on the 22nd -- it doesn't produce, i think?
+    // Only the first season is tricky; for the following seasons, we know
+    // that we get exactly seven leaves per season.
+    let num_harvests = 0;
+    let num_days = days_left;
+    while (num_days > 28) {
+      num_days -= 28;
+      num_harvests += 7;
+    }
+
+    // Tea has strange day-dependent behavior, but if we restrict it to the
+    // first season, it becomes the same as a standard regrowth crop, with
+    // a growth period of 20 days, and a regrowth period of 1 day!
+    // (20, not 21 -- remember the first day)
+    if (num_days >= crop.days_to_grow) {
+      num_harvests += num_days - crop.days_to_grow;
+    }
 
     return {
       // The other seasons we get all 7 harvests.
-      number: leaves_harvested_first_season + 7 * (seasons_left - 1),
+      number: num_harvests,
       duration: days_left, // idk
     };
   } else {
@@ -521,8 +561,7 @@ export function calculate(
   // How many harvests do we get, if any?
   const harvests = getNumberOfHarvests(
     crop,
-    scenario.season,
-    scenario.start_day,
+    scenario.start,
     scenario.multiseason_enabled,
     scenario.fertilizer.speedgro,
     is_agriculturist

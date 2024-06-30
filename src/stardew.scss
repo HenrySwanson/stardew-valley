@@ -32,6 +32,12 @@ $LIGHT_TEXT: #ddd;
   --dark-color: #2a3f53;
 }
 
+:root.greenhouse {
+  --background-color: #d98cd9;
+  --light-color: #924592;
+  --dark-color: #552b55;
+}
+
 .title-bar {
   margin: 0;
   padding: 5px;

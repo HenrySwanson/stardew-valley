@@ -13,6 +13,7 @@ import {
   QualityFertilizer,
   SpeedGro,
   Quality,
+  ScenarioType,
 } from "./crops";
 import "./stardew.scss";
 
@@ -311,9 +312,10 @@ function CropTable({
   );
 }
 
-type Day = {
-  season: Season;
+type DayControlState = {
+  season: Season | "greenhouse";
   start_day: number;
+  num_greenhouse_seasons: number;
 };
 
 type Settings = {
@@ -552,36 +554,81 @@ function SettingsSidebar({
 }
 
 function DayControls({
-  day,
-  changeDay,
+  state,
+  changeState,
 }: {
-  day: Day;
-  changeDay: (day: Day) => void;
+  state: DayControlState;
+  changeState: (day: DayControlState) => void;
 }): JSX.Element {
-  const season_options = ALL_SEASONS.map((s) => {
-    const season_name = Season.toString(s);
-    return <option value={season_name.toLowerCase()}>{season_name}</option>;
+  type Label = "spring" | "summer" | "fall" | "winter" | "greenhouse";
+
+  function labelToValue(l: Label): Season | "greenhouse" {
+    if (l === "greenhouse") {
+      return "greenhouse";
+    }
+    return Season.fromString(l);
+  }
+
+  function valueToLabel(v: Season | "greenhouse"): Label {
+    if (v === "greenhouse") {
+      return "greenhouse";
+    }
+    // @ts-expect-error: Seasons must be one of those labels
+    return Season.toString(v).toLowerCase();
+  }
+
+  const choices: (Season | "greenhouse")[] = [...ALL_SEASONS, "greenhouse"];
+
+  const season_options = choices.map((s) => {
+    const label = valueToLabel(s);
+    return <option value={label}>{titleCase(label)}</option>;
   });
+
   const season_select = (
     <select
-      value={Season[day.season].toLowerCase()}
+      value={valueToLabel(state.season)}
       onChange={(e) => {
-        changeDay({ ...day, season: Season.fromString(e.target.value) });
+        changeState({
+          ...state,
+          season: labelToValue(e.target.value as Label),
+        });
       }}
     >
       {season_options}
     </select>
   );
 
-  const day_input = (
-    <input
-      type="number"
-      value={day.start_day}
-      onChange={(e) => {
-        changeDay({ ...day, start_day: e.target.valueAsNumber });
-      }}
-    />
-  );
+  // Which number input should we show? Depends on if we're greenhouse or not.
+  const [day_label, day_input] = (() => {
+    if (state.season !== "greenhouse") {
+      const label = <>Day (1-28)</>;
+      const input = (
+        <input
+          type="number"
+          value={state.start_day}
+          onChange={(e) => {
+            changeState({ ...state, start_day: e.target.valueAsNumber });
+          }}
+        />
+      );
+      return [label, input];
+    } else {
+      const label = <>Num Seasons (1+)</>;
+      const input = (
+        <input
+          type="number"
+          value={state.num_greenhouse_seasons}
+          onChange={(e) => {
+            changeState({
+              ...state,
+              num_greenhouse_seasons: e.target.valueAsNumber,
+            });
+          }}
+        />
+      );
+      return [label, input];
+    }
+  })();
 
   return (
     <>
@@ -593,7 +640,7 @@ function DayControls({
       </label>
       <label>
         <div className="settings-annotation">
-          <b>Day (1-28)</b>
+          <b>{day_label}</b>
         </div>
         {day_input}
       </label>
@@ -601,9 +648,10 @@ function DayControls({
   );
 }
 
-const DEFAULT_DAY: Day = {
+const DEFAULT_DAY_STATE: DayControlState = {
   season: Season.SPRING,
   start_day: 1,
+  num_greenhouse_seasons: 4,
 };
 
 const DEFAULT_SETTINGS: Settings = {
@@ -693,18 +741,22 @@ function CropInfo({
 }
 
 function Root() {
-  const [day, setDay] = useState<Day>(DEFAULT_DAY);
+  const [day, setDay] = useState<DayControlState>(DEFAULT_DAY_STATE);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [cropSelected, setCropSelected] = useState<string | null>(null);
 
-  function updateDay(day: Day) {
-    // When the user ticks the season too far, wrap around and bump the season, for nice UX.
-    if (day.start_day <= 0) {
-      day.start_day = 28;
-      day.season = (day.season + 3) % 4;
-    } else if (day.start_day > 28) {
-      day.start_day = 1;
-      day.season = (day.season + 1) % 4;
+  function updateDay(day: DayControlState) {
+    if (day.season === "greenhouse") {
+      day.num_greenhouse_seasons = Math.max(day.num_greenhouse_seasons, 1);
+    } else {
+      // When the user ticks the season too far, wrap around and bump the season, for nice UX.
+      if (day.start_day <= 0) {
+        day.start_day = 28;
+        day.season = (day.season + 3) % 4;
+      } else if (day.start_day > 28) {
+        day.start_day = 1;
+        day.season = (day.season + 1) % 4;
+      }
     }
 
     setDay(day);
@@ -724,9 +776,12 @@ function Root() {
     settings.farming_level,
     settings.fertilizer.quality
   );
+  const scenario_type: ScenarioType =
+    day.season === "greenhouse"
+      ? { kind: "greenhouse", num_seasons: day.num_greenhouse_seasons }
+      : { kind: "season", season: day.season, start_day: day.start_day };
   const scenario: Scenario = {
-    season: day.season,
-    start_day: day.start_day,
+    start: scenario_type,
     multiseason_enabled: settings.multiseason_checked,
     quality_probabilities: settings.quality_checkbox ? quality : null,
     tiller_skill_chosen: tillerEligible(settings) && settings.tiller_checkbox,
@@ -756,7 +811,10 @@ function Root() {
   );
 
   // Change style of whole document
-  document.documentElement.className = Season[day.season].toLowerCase();
+  document.documentElement.className =
+    day.season === "greenhouse"
+      ? "greenhouse"
+      : Season[day.season].toLowerCase();
 
   // Handler for the box on the RHS
   function updateInfoBox(crop_name: string) {
@@ -772,7 +830,7 @@ function Root() {
       <SettingsSidebar settings={settings} changeSettings={updateSettings} />
       <div className="main-body">
         <div className="day-controls">
-          <DayControls day={day} changeDay={updateDay} />
+          <DayControls state={day} changeState={updateDay} />
         </div>
         <div className="main-table">
           <CropTable crop_data={crop_data} on_row_click={updateInfoBox} />
