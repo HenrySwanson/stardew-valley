@@ -18,7 +18,7 @@ import {
 import "./stardew.scss";
 
 import { clsx } from "clsx";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 // should i pull this from a JSON like i'm doing now? or should i just
@@ -581,7 +581,11 @@ function DayControls({
 
   const season_options = choices.map((s) => {
     const label = valueToLabel(s);
-    return <option value={label}>{titleCase(label)}</option>;
+    return (
+      <option value={label} key={label}>
+        {titleCase(label)}
+      </option>
+    );
   });
 
   const season_select = (
@@ -740,9 +744,20 @@ function CropInfo({
   );
 }
 
+// TODO: merge settings into one thing?
 function Root() {
-  const [day, setDay] = useState<DayControlState>(DEFAULT_DAY_STATE);
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [day, setDay] = useState<DayControlState>(() => {
+    const saved = localStorage.getItem("day");
+    return saved !== null
+      ? (JSON.parse(saved) as DayControlState) // trust that it's the right type
+      : DEFAULT_DAY_STATE;
+  });
+  const [settings, setSettings] = useState<Settings>(() => {
+    const saved = localStorage.getItem("settings");
+    return saved !== null
+      ? (JSON.parse(saved) as Settings) // trust that it's the right type
+      : DEFAULT_SETTINGS;
+  });
   const [cropSelected, setCropSelected] = useState<string | null>(null);
 
   function updateDay(day: DayControlState) {
@@ -824,6 +839,11 @@ function Root() {
       setCropSelected(null);
     }
   }
+
+  useEffect(() => {
+    localStorage.setItem("day", JSON.stringify(day));
+    localStorage.setItem("settings", JSON.stringify(settings));
+  });
 
   return (
     <>
