@@ -115,11 +115,11 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  min-height: 100%;
 
   box-sizing: border-box;
   padding: 10px;
-  border-right: 2px solid var(--dark-color);
+  border: 2px solid var(--dark-color);
+  border-left: none;
   background-color: var(--light-color);
   color: $LIGHT_TEXT;
 
@@ -175,6 +175,7 @@ body {
     // TODO: is this color better in all cases? it looks nice on mobile
     // at least.
     background-color: #222;
+    border: none;
     border-right: 2px solid #333;
 
     // Not part of the layout anymore; place it at the left edge
@@ -183,6 +184,10 @@ body {
     top: 0;
     left: 0;
     z-index: 2; // above the backdrop
+
+    // Expand to viewport height and allow scroll
+    height: 100vh;
+    overflow-y: scroll;
 
     transition: transform 0.3s ease;
 
