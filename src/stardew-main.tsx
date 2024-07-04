@@ -521,18 +521,23 @@ function SettingsSidebar({
 
   return (
     <>
-      <div
-        className={clsx("settings-panel", !sidebarOpen && "sidebar-collapsed")}
-      >
-        <h2>Settings</h2>
-        <button
-          className="close-button small-screen-only"
-          onClick={() => setSidebarOpen(false)}
+      <div className="sidebar-outer">
+        <div
+          className={clsx("sidebar-inner", !sidebarOpen && "sidebar-collapsed")}
         >
-          &times;
-        </button>
-        <hr />
-        <SettingControls settings={settings} changeSettings={changeSettings} />
+          <h2>Settings</h2>
+          <button
+            className="close-button small-screen-only"
+            onClick={() => setSidebarOpen(false)}
+          >
+            &times;
+          </button>
+          <hr />
+          <SettingControls
+            settings={settings}
+            changeSettings={changeSettings}
+          />
+        </div>
       </div>
 
       {/*things outside the normal layout flow*/}

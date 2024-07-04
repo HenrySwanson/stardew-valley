@@ -88,10 +88,17 @@ body {
 // ============================================================================
 
 .day-controls {
-  margin-top: 10px;
+  position: sticky;
+  top: 0px;
+  padding: 10px 20px 20px;
+
   display: flex;
   column-gap: 20px;
-  padding: 0 20px;
+
+  background-color: var(--light-color);
+  color: $LIGHT_TEXT;
+  border: 2px solid var(--dark-color);
+  border-radius: 0 0 10px 10px;
 
   * {
     flex: 1;
@@ -110,13 +117,19 @@ body {
 // Settings sidebar
 // ============================================================================
 
-.settings-panel {
+.sidebar-outer {
   // Pin the sidebar to the left edge of the parent div
   position: absolute;
   top: 0;
   left: 0;
+  height: 100%;
+}
 
-  box-sizing: border-box;
+.sidebar-inner {
+  position: sticky;
+  top: 0;
+
+  // box-sizing: border-box;
   padding: 10px;
   border: 2px solid var(--dark-color);
   border-left: none;
@@ -171,13 +184,7 @@ body {
 // If we're on a sufficiently small screen, change the layout
 // to an expandable sidebar.
 @media (max-width: 1350px) {
-  .settings-panel {
-    // TODO: is this color better in all cases? it looks nice on mobile
-    // at least.
-    background-color: #222;
-    border: none;
-    border-right: 2px solid #333;
-
+  .sidebar-outer {
     // Not part of the layout anymore; place it at the left edge
     // of the viewport.
     position: fixed;
@@ -185,8 +192,19 @@ body {
     left: 0;
     z-index: 2; // above the backdrop
 
-    // Expand to viewport height and allow scroll
+    // Expand to viewport height
     height: 100vh;
+  }
+
+  .sidebar-inner {
+    // TODO: is this color better in all cases? it looks nice on mobile
+    // at least.
+    background-color: #222;
+    border: none;
+    border-right: 2px solid #333;
+
+    // Fill parent element and allow scroll
+    height: 100%;
     overflow-y: scroll;
 
     transition: transform 0.3s ease;

@@ -278,7 +278,7 @@ export function getNumberOfHarvests(
 ): Harvests | "out-of-season" {
   const days_left =
     start.kind === "greenhouse"
-      ? start.num_seasons * 28 - 1  // ignore first day
+      ? start.num_seasons * 28 - 1 // ignore first day
       : getNumDaysRemaining(
           crop,
           start.season,
