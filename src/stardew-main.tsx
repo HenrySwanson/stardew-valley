@@ -500,7 +500,7 @@ function SettingControls({
             const pct = quality[q] * 100;
             const icon = QUALITY_STAR_ICONS[q];
             return (
-              <li>
+              <li key={"quality-pct-" + q}>
                 <IconTag src={icon}>{pct.toFixed(0)}%</IconTag>
               </li>
             );
@@ -681,25 +681,36 @@ function CropInfo({
   const y = def.yield ?? 1;
   const seasons = def.season
     ? Season.getArray(Season.fromString(def.season), def.multiseason ?? 1).map(
-        (s) => [Season.toString(s), <br />]
+        (s) => [<li key={s}>{Season.toString(s)}</li>]
       )
     : ["None"];
 
-  const rows: [string | JSX.Element, string | number | JSX.Element][] = [
-    ["Season(s)", <>{seasons}</>],
-    ["Growth", <TimeTag days={crop_data.growth_period} />],
+  const rows: [string, string | JSX.Element, string | number | JSX.Element][] =
     [
-      "Regrowth",
-      def.regrowth_period ? <TimeTag days={def.regrowth_period} /> : "-",
-    ],
-    [
-      "Yield",
-      def.percent_chance_extra ? `${y} + ${def.percent_chance_extra}%` : y,
-    ],
-    ["Harvests", crop_data.num_harvests],
-    ["Seed Cost", <GoldTag amount={def.seed_cost} fractionalDigits={0} />],
-    ["Final Product", <GoodTag name={crop_data.proceeds.name} />],
-  ];
+      ["season", "Season(s)", <ul className="seasons-list">{seasons}</ul>],
+      ["growth", "Growth", <TimeTag days={crop_data.growth_period} />],
+      [
+        "regrowth",
+        "Regrowth",
+        def.regrowth_period ? <TimeTag days={def.regrowth_period} /> : "-",
+      ],
+      [
+        "yield",
+        "Yield",
+        def.percent_chance_extra ? `${y} + ${def.percent_chance_extra}%` : y,
+      ],
+      ["harvests", "Harvests", crop_data.num_harvests],
+      [
+        "seed-cost",
+        "Seed Cost",
+        <GoldTag amount={def.seed_cost} fractionalDigits={0} />,
+      ],
+      [
+        "final-product",
+        "Final Product",
+        <GoodTag name={crop_data.proceeds.name} />,
+      ],
+    ];
 
   // next is sell price
   if (crop_data.processing_type === "raw") {
@@ -707,6 +718,7 @@ function CropInfo({
       const price = crop_data.crop_proceeds[q].price;
       const icon = QUALITY_STAR_ICONS[q];
       rows.push([
+        "sell-price-" + q,
         <>
           Sell Price (<InlineIcon src={icon} />)
         </>,
@@ -715,32 +727,35 @@ function CropInfo({
     }
   } else {
     rows.push([
+      "sell-price",
       "Sell Price",
       <GoldTag amount={crop_data.proceeds.price} fractionalDigits={0} />,
     ]);
   }
 
   return (
-    <table className="crop-sidetable">
+    <div className="crop-sidetable">
       <button className="close-button" onClick={onCloseClick}>
         &times;
       </button>
-      <thead>
-        <tr>
-          <th colSpan={2}>
-            <IconTag src={getIconPath(def.name)}>{def.name}</IconTag>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(([name, prop]) => (
+      <table className="crop-sidetable">
+        <thead>
           <tr>
-            <td>{name}</td>
-            <td>{prop}</td>
+            <th colSpan={2}>
+              <IconTag src={getIconPath(def.name)}>{def.name}</IconTag>
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map(([key, prop, value]) => (
+            <tr key={key}>
+              <td>{prop}</td>
+              <td>{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

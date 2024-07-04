@@ -97,7 +97,7 @@ body {
     flex: 1;
   }
 
-  // Makes them stretch out to the width of the sidebar
+  // Makes them stretch out to the width of the flexbox child
   & input[type="number"],
   select {
     display: block;
@@ -336,6 +336,7 @@ table.sortable thead th[aria-sort="descending"] {
   border-radius: 15px;
 
   table {
+    border: none;
     border-collapse: collapse;
   }
 
@@ -343,4 +344,10 @@ table.sortable thead th[aria-sort="descending"] {
     padding: 5px 10px;
     border-top: 1px solid var(--background-color);
   }
+}
+
+.seasons-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
