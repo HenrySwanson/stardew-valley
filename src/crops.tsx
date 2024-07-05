@@ -52,6 +52,7 @@ export namespace Season {
 // Various enums
 
 export type Quality = "normal" | "silver" | "gold" | "iridium";
+export const QUALITIES: Quality[] = ["normal", "silver", "gold", "iridium"];
 
 export type Level10Profession = "artisan" | "agriculturist";
 
