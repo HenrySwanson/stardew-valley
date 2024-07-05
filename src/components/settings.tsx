@@ -227,10 +227,10 @@ export function SettingsSidebar({
 
   return (
     <>
-      <div className="sidebar-outer">
-        <div
-          className={clsx("sidebar-inner", !sidebarOpen && "sidebar-collapsed")}
-        >
+      <div
+        className={clsx("sidebar-outer", !sidebarOpen && "sidebar-collapsed")}
+      >
+        <div className="sidebar-inner">
           <h2>Settings</h2>
           <button
             className="close-button small-screen-only"

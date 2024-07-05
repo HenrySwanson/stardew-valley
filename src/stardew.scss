@@ -194,6 +194,12 @@ body {
 
     // Expand to viewport height
     height: 100vh;
+
+    // On collapse, slide out of viewport
+    transition: transform 0.3s ease;
+    &.sidebar-collapsed {
+      transform: translate(-100%);
+    }
   }
 
   .sidebar-inner {
@@ -206,12 +212,6 @@ body {
     // Fill parent element and allow scroll
     height: 100%;
     overflow-y: scroll;
-
-    transition: transform 0.3s ease;
-
-    &.sidebar-collapsed {
-      transform: translate(-100%);
-    }
   }
 
   .settings-button {
